@@ -4,10 +4,10 @@ import (
 	"flag"
 	"log"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/cyber_bed/internal/app"
 	"github.com/cyber_bed/internal/config"
-
-	"github.com/labstack/echo/v4"
 )
 
 func main() {

@@ -1,6 +1,7 @@
 package app
 
 import (
+	httpCORS "net/http"
 	"net/url"
 	"strconv"
 
@@ -25,6 +26,7 @@ import (
 	httpUsers "github.com/cyber_bed/internal/users/delivery"
 	usersRepository "github.com/cyber_bed/internal/users/repository"
 	usersUsecase "github.com/cyber_bed/internal/users/usecase"
+	"github.com/cyber_bed/migrations"
 	logger "github.com/cyber_bed/pkg"
 )
 
@@ -60,6 +62,13 @@ func (s *Server) init() {
 	s.MakeRouter()
 
 	s.MakeEchoLogger()
+	s.makeCORS()
+
+	if s.Config.Database.InitDB.Init {
+		if err := s.makeMigrations(s.Config.FormatDbAddr(), s.Config.Database.InitDB.PathToDir); err != nil {
+			s.Echo.Logger.Error(err)
+		}
+	}
 }
 
 func (s *Server) Start() error {
@@ -107,11 +116,6 @@ func (s *Server) MakeUsecases() {
 		s.Config.RecognizeAPI.CountResults,
 	)
 
-	// if u, err = url.Parse(s.Config.TrefleAPI.BaseURL); err != nil {
-	// 	s.Echo.Logger.Error(errors.Wrap(err, "failed to parse base url"))
-	// 	return
-	// }
-
 	if u, err = url.Parse(s.Config.PerenualAPI.BaseURL); err != nil {
 		s.Echo.Logger.Error(errors.Wrap(err, "failed to parse base url"))
 		return
@@ -155,8 +159,30 @@ func (s *Server) makeMiddlewares() {
 	s.authMiddleware = authMiddlewares.New(s.authUsecase, s.usersUsecase)
 }
 
+func (s *Server) makeMigrations(url, pathToDir string) error {
+	if err := migrations.StartMigration(url, pathToDir); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Server) MakeEchoLogger() {
 	s.Echo.Logger = logger.GetInstance()
 	s.Echo.Logger.SetLevel(logger.ToLevel(s.Config.LoggerLvl))
 	s.Echo.Logger.Info("server started")
+}
+
+func (s *Server) makeCORS() {
+	s.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{
+			httpCORS.MethodGet,
+			httpCORS.MethodHead,
+			httpCORS.MethodPut,
+			httpCORS.MethodPatch,
+			httpCORS.MethodPost,
+			httpCORS.MethodDelete,
+		},
+		AllowCredentials: true,
+	}))
 }

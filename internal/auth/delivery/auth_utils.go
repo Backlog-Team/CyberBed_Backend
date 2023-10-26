@@ -19,9 +19,10 @@ func (h AuthHandler) makeHTTPCookie(sessionID string) *http.Cookie {
 			AddDate(int(h.cookieConfig.ExpireDate.Years),
 				int(h.cookieConfig.ExpireDate.Months),
 				int(h.cookieConfig.ExpireDate.Days)),
-		Secure:   h.cookieConfig.Secure,
+		Secure:   false,
 		HttpOnly: h.cookieConfig.HttpOnly,
 		SameSite: http.SameSiteNoneMode,
+		Path:     "/",
 	}
 }
 

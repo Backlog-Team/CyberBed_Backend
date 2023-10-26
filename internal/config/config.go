@@ -25,6 +25,10 @@ type Config struct {
 		Host    string `yaml:"host"`
 		Port    uint64 `yaml:"port"`
 		SslMode string `yaml:"sslmode"`
+		InitDB  struct {
+			Init      bool   `yaml:"init"`
+			PathToDir string `yaml:"path_to_dir"`
+		} `yaml:"init_db"`
 	} `yaml:"database"`
 	LoggerLvl    string `yaml:"logger_level"`
 	RecognizeAPI struct {
@@ -74,18 +78,33 @@ func New() *Config {
 			Host    string `yaml:"host"`
 			Port    uint64 `yaml:"port"`
 			SslMode string `yaml:"sslmode"`
+			InitDB  struct {
+				Init      bool   `yaml:"init"`
+				PathToDir string `yaml:"path_to_dir"`
+			} `yaml:"init_db"`
 		}(struct {
 			User    string
 			DbName  string
 			Host    string
 			Port    uint64
 			SslMode string
+			InitDB  struct {
+				Init      bool
+				PathToDir string
+			}
 		}{
 			User:    "postgres",
 			DbName:  "cyber_garden",
 			Host:    "localhost",
 			Port:    5432,
 			SslMode: "disable",
+			InitDB: struct {
+				Init      bool
+				PathToDir string
+			}{
+				Init:      true,
+				PathToDir: getPwd() + "migrations/plant-database/json",
+			},
 		}),
 		LoggerLvl: loggerLevel,
 		RecognizeAPI: struct {
@@ -189,4 +208,9 @@ func (c *Config) FormatDbAddr() string {
 
 func ParseFlag(path *string) {
 	flag.StringVar(path, "ConfigPath", "configs/setup.yaml", "Path to Config")
+}
+
+func getPwd() string {
+	pwd, _ := os.Getwd()
+	return pwd
 }
