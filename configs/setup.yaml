@@ -9,8 +9,8 @@ database:
   port: 5432
   sslmode: "disable"
   init_db:
-    init: true
-    path_to_dir: "/home/milchenko/technopark/fourth_semestr/CyberBed_Backend/migrations/plant-database/json"
+    init: false
+    path_to_dir: "migrations/plant-database/json"
 
 logger_level: "debug"
 

@@ -11,14 +11,59 @@ import (
 
 type PlantsUsecase struct {
 	plantsRepository domain.PlantsRepository
-	plantsAPI        domain.PlantsAPI
+	// plantsAPI        domain.PlantsAPI
 }
 
 func NewPlansUsecase(p domain.PlantsRepository, api domain.PlantsAPI) domain.PlantsUsecase {
 	return PlantsUsecase{
 		plantsRepository: p,
-		plantsAPI:        api,
+		// plantsAPI:        api,
 	}
+}
+
+func (u PlantsUsecase) GetPlantByID(plantID uint64) (models.XiaomiPlant, error) {
+	plant, err := u.plantsRepository.GetPlantByID(plantID)
+	if err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return models.XiaomiPlant{}, errors.Wrapf(
+				models.ErrNotFound,
+				"plant with id: {%d} not found",
+				plantID,
+			)
+		}
+		return models.XiaomiPlant{}, err
+	}
+	return plant, nil
+}
+
+func (u PlantsUsecase) GetPlantByName(plantName string) ([]models.XiaomiPlant, error) {
+	plants, err := u.plantsRepository.GetByPlantName(plantName)
+	if err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return nil, errors.Wrapf(
+				models.ErrNotFound,
+				"plant with name: {%s} not found",
+				plantName,
+			)
+		}
+		return nil, err
+	}
+	return plants, nil
+}
+
+func (u PlantsUsecase) GetPlantsPage(pageNum uint64) ([]models.XiaomiPlant, error) {
+	plants, err := u.plantsRepository.GetPlantsPage(pageNum)
+	if err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return nil, errors.Wrapf(
+				models.ErrNotFound,
+				"cannot get page number: {%d}",
+				pageNum,
+			)
+		}
+		return nil, err
+	}
+	return plants, nil
 }
 
 func (u PlantsUsecase) AddPlant(plant models.Plant) error {
@@ -29,7 +74,7 @@ func (u PlantsUsecase) AddPlant(plant models.Plant) error {
 }
 
 func (u PlantsUsecase) GetPlant(userID uint64, plantID int64) (models.Plant, error) {
-	plants, err := u.plantsRepository.GetPlantsByID(userID)
+	plants, err := u.plantsRepository.GetPlantsByUserID(userID)
 	if err != nil {
 		if errors.Is(gorm.ErrRecordNotFound, err) {
 			return models.Plant{}, errors.Wrapf(
@@ -56,7 +101,7 @@ func (u PlantsUsecase) GetPlant(userID uint64, plantID int64) (models.Plant, err
 }
 
 func (u PlantsUsecase) GetPlants(userID uint64) ([]models.Plant, error) {
-	plantsIDs, err := u.plantsRepository.GetPlantsByID(userID)
+	plantsIDs, err := u.plantsRepository.GetPlantsByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +118,7 @@ func (u PlantsUsecase) GetPlants(userID uint64) ([]models.Plant, error) {
 }
 
 func (u PlantsUsecase) DeletePlant(userID, plantID uint64) error {
-	user, err := u.plantsRepository.GetPlantsByID(userID)
+	user, err := u.plantsRepository.GetPlantsByUserID(userID)
 	if err != nil {
 		return err
 	}

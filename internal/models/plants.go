@@ -28,7 +28,7 @@ type XiaomiPlant struct {
 	ID          uint64
 	PlantID     string                 `json:"pid"`
 	Basic       XiaomiPlantBasic       `json:"basic"       gorm:"foreignkey:XiaomiPlantID;association_foreignkey:ID"`
-	DisplayPid  string                 `json:"display_pid"`
+	DisplayPid  string                 `json:"display_pid" gorm:"index"`
 	Maintenance XiaomiPlantMaintenance `json:"maintenance" gorm:"foreignkey:XiaomiPlantID;association_foreignkey:ID"`
 	Parameter   XiaomiPlantPrameter    `json:"parameter"   gorm:"foreignkey:XiaomiPlantID;association_foreignkey:ID"`
 	Image       string                 `json:"image"`

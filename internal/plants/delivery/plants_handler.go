@@ -2,6 +2,7 @@ package httpPlants
 
 import (
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -9,6 +10,7 @@ import (
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
 	"github.com/cyber_bed/internal/models"
+	"github.com/cyber_bed/internal/utils/decoding"
 )
 
 type PlantsHandler struct {
@@ -39,7 +41,7 @@ func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	plant, err := h.plantsAPI.SearchByID(c.Request().Context(), plantID)
+	plant, err := h.plantsUsecase.GetPlantByID(plantID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -47,13 +49,32 @@ func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
 	return c.JSON(http.StatusOK, plant)
 }
 
+func (h PlantsHandler) GetPlantImage(c echo.Context) error {
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	plant, err := h.plantsUsecase.GetPlantByID(plantID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+
+	fileName, err := decoding.DecodeBase64(plant.Image)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	defer os.Remove(fileName)
+
+	plant.Image = ""
+	return c.Attachment(fileName, plant.Image)
+}
+
 func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 	pageStr := c.QueryParam("page")
-
-	var plants []models.Plant
 	if pageStr == "" {
 		plantName := c.QueryParam("name")
-		plants, err := h.plantsAPI.SearchByName(c.Request().Context(), plantName)
+		plants, err := h.plantsUsecase.GetPlantByName(plantName)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)
 		}
@@ -65,7 +86,7 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	plants, err = h.plantsAPI.GetPage(c.Request().Context(), pageNum)
+	plants, err := h.plantsUsecase.GetPlantsPage(pageNum)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
