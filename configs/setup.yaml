@@ -5,7 +5,7 @@ server:
 database:
   user: "postgres"
   dbname: "cyber_garden"
-  host: "localhost"
+  host: "posgres"
   port: 5432
   sslmode: "disable"
   init_db:
