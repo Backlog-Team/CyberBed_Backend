@@ -16,7 +16,6 @@ import (
 type PlantsHandler struct {
 	plantsUsecase domain.PlantsUsecase
 	usersUsecase  domain.UsersUsecase
-	plantsAPI     domain.PlantsAPI
 }
 
 func NewPlantsHandler(
@@ -27,7 +26,6 @@ func NewPlantsHandler(
 	return PlantsHandler{
 		plantsUsecase: p,
 		usersUsecase:  u,
-		plantsAPI:     pl,
 	}
 }
 
@@ -152,12 +150,12 @@ func (h PlantsHandler) GetPlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	plant, err = h.plantsAPI.SearchByID(c.Request().Context(), plant.ID)
+	xiaomiPlant, err := h.plantsUsecase.GetPlantByID(plant.ID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.JSON(http.StatusOK, plant)
+	return c.JSON(http.StatusOK, xiaomiPlant)
 }
 
 func (h PlantsHandler) GetPlants(c echo.Context) error {
@@ -176,12 +174,12 @@ func (h PlantsHandler) GetPlants(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	for index, pl := range plants {
-		plants[index], err = h.plantsAPI.SearchByID(c.Request().Context(), pl.ID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusNotFound, err)
-		}
-	}
+	// for index, pl := range plants {
+	// 	plants[index], err = h.plantsAPI.SearchByID(c.Request().Context(), pl.ID)
+	// 	if err != nil {
+	// 		return echo.NewHTTPError(http.StatusNotFound, err)
+	// 	}
+	// }
 
 	return c.JSON(http.StatusOK, plants)
 }

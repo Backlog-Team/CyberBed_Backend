@@ -1,0 +1,32 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+
+  steps:
+    - uses: actions/checkout@3
+    - name: copy files via ssh secrets
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        source: "docker-compose.yaml, .env, configs/"
+        target: "backend"
+        rm: true
+    - name: executing remote ssh commands using ssh key
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+      script: |
+        sudo docker rm $(sudo docker ps -aq)
+        sudo docker rmi $(sudo docker images -aq)
+        sudo docker pull backlog/cyber-bed

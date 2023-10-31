@@ -23,6 +23,7 @@ func NewPostgres(url string) (*Postgres, error) {
 		&models.XiaomiPlantBasic{},
 		&models.XiaomiPlantMaintenance{},
 		&models.XiaomiPlantPrameter{},
+		&models.UserPlants{},
 	)
 
 	return &Postgres{

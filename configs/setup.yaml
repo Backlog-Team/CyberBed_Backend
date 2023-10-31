@@ -1,15 +1,15 @@
 server:
-  address: "0.0.0.0"
+  address: "localhost"
   port: 8080
 
 database:
   user: "postgres"
   dbname: "cyber_garden"
-  host: "postgres"
+  host: "localhost"
   port: 5432
   sslmode: "disable"
   init_db:
-    init: false
+    init: true
     path_to_dir: "migrations/plant-database/json"
 
 logger_level: "debug"

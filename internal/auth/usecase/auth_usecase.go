@@ -3,13 +3,13 @@ package authUsecase
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/cyber_bed/internal/config"
 	"github.com/cyber_bed/internal/crypto"
 	"github.com/cyber_bed/internal/domain"
 	"github.com/cyber_bed/internal/models"
-	"github.com/google/uuid"
 )
 
 type AuthUsecase struct {

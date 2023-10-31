@@ -11,13 +11,11 @@ import (
 
 type PlantsUsecase struct {
 	plantsRepository domain.PlantsRepository
-	// plantsAPI        domain.PlantsAPI
 }
 
 func NewPlansUsecase(p domain.PlantsRepository, api domain.PlantsAPI) domain.PlantsUsecase {
 	return PlantsUsecase{
 		plantsRepository: p,
-		// plantsAPI:        api,
 	}
 }
 
@@ -100,18 +98,23 @@ func (u PlantsUsecase) GetPlant(userID uint64, plantID int64) (models.Plant, err
 	}, nil
 }
 
-func (u PlantsUsecase) GetPlants(userID uint64) ([]models.Plant, error) {
+func (u PlantsUsecase) GetPlants(userID uint64) ([]models.XiaomiPlant, error) {
 	plantsIDs, err := u.plantsRepository.GetPlantsByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
 	pl := plantsIDs.PlantsID
-	plants := make([]models.Plant, 0)
+	plants := make([]models.XiaomiPlant, 0)
 	for _, p := range pl {
-		plants = append(plants, models.Plant{
-			ID: uint64(p),
-		})
+		curPlant, err := u.plantsRepository.GetPlantByID(uint64(p))
+		if err != nil {
+			if errors.Is(gorm.ErrRecordNotFound, err) {
+				return nil, errors.Wrapf(models.ErrNotFound, "Plant with id {%d} not found", p)
+			}
+			return nil, err
+		}
+		plants = append(plants, curPlant)
 	}
 
 	return plants, nil
