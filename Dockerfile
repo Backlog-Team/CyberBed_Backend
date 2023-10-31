@@ -14,8 +14,8 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=0 /github.com/cyber_bed/bin/server .
-COPY --from=0 /github.com/cyber_bed/configs configs/
+COPY --from=BUILDER /github.com/cyber_bed/bin/server .
+COPY --from=BUILDER /github.com/cyber_bed/configs configs/
 
 EXPOSE 8080
 

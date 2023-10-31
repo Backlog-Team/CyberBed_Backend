@@ -85,7 +85,7 @@ func (s *Server) MakeHandlers() {
 }
 
 func (s *Server) MakeUsecases() {
-	pgParams := s.Config.FormatDbAddr() + " password=admin"
+	pgParams := s.Config.FormatDbAddr()
 
 	authDB, err := authRepository.NewPostgres(pgParams)
 	if err != nil {

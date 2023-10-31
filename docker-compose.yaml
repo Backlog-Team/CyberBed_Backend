@@ -4,10 +4,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    depends_on:
-      - postgres
     ports:
       - "8080:8080"
+    depends_on:
+      - postgres
     networks:
       - server
 
@@ -25,9 +25,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: cyber_garden
       POSTGRES_PASSWORD: admin
+      DATABASE_HOST: postgres
+    ports:
+      - "5432:5432"
     networks:
       - server
 
 networks:
   server:
     driver: bridge
+    name: "server"
+    external: false

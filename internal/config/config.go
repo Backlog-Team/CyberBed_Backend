@@ -197,11 +197,11 @@ func (c *Config) Open(path string) error {
 
 func (c *Config) FormatDbAddr() string {
 	return fmt.Sprintf(
-		"host=%s port=%d user=%s dbname=%s sslmode=%s",
+		"host=%s user=%s password=admin dbname=%s port=%d sslmode=%s",
 		c.Database.Host,
-		c.Database.Port,
 		c.Database.User,
 		c.Database.DbName,
+		c.Database.Port,
 		c.Database.SslMode,
 	)
 }
