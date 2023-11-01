@@ -27,9 +27,9 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            docker rm -f $(sudo docker ps -aq)
-            docker rmi -f $(sudo docker images -aq)
-            docker volume rm -f $(sudo docker volume ls -q)
+            docker rm -f $(docker ps -aq)
+            docker rmi -f $(docker images -aq)
+            docker volume rm -f $(docker volume ls -q)
 
             export RECOGNIZE_API_TOKEN=${{ secrets.RECOGNIZE_API_TOKEN }}
             export TREFLE_API_TOKEN=${{ secrets.TREFLE_API_TOKEN }}
