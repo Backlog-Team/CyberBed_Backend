@@ -36,4 +36,5 @@ jobs:
             export PERENUAL_API_TOKEN=${{ secrets.PERENUAL_API_TOKEN }}
 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-image
+            cd ~/backend 
             docker compose up -d
