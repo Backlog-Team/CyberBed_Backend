@@ -15,7 +15,7 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=BUILDER /github.com/cyber_bed/bin/server .
-COPY --from=BUILDER /github.com/cyber_bed/configs/app/deploy.yaml configs/
+COPY --from=BUILDER /github.com/cyber_bed/configs/app/deploy.yaml configs/deploy.yaml
 
 EXPOSE 8080
 
