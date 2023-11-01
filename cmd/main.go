@@ -18,7 +18,7 @@ func main() {
 
 	cfg := config.New(isInitDB)
 	if err := cfg.Open(configPath); err != nil {
-		log.Fatal("Failed to open config file")
+		log.Print("Failed to open config file")
 	}
 	log.Print(cfg.Database.InitDB.PathToDir)
 	log.Print(cfg.Database.InitDB.Init)
