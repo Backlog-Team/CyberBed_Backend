@@ -1,6 +1,7 @@
 version: "3.3"
 services:
   backend:
+    hostname: app
     container_name: cyberbed-image
     image: milchenko/cyberbed-image
     ports:
@@ -25,6 +26,8 @@ services:
       POSTGRES_DB: cyber_garden
       POSTGRES_PASSWORD: admin
       DATABASE_HOST: postgres
+    ports:
+      - "5432:5432"
     networks:
       - server
 
