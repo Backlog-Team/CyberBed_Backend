@@ -9,7 +9,7 @@ database:
   port: 5432
   sslmode: "disable"
   init_db:
-    path_to_dir: "configs/json"
+    path_to_dir: "configs/plant-database/json"
 
 logger_level: "debug"
 
