@@ -8,6 +8,8 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+    volume:
+      - ~/plant-database:/root/configs
     networks:
       - server
 
