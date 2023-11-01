@@ -14,15 +14,18 @@ import (
 type usecase struct {
 	apiRecognition domainRecognition.API
 	apiPlants      domain.PlantsAPI
+	plantsUsecase  domain.PlantsUsecase
 }
 
 func New(
 	api domainRecognition.API,
 	apiPlants domain.PlantsAPI,
+	plantsUsecase domain.PlantsUsecase,
 ) domainRecognition.Usecase {
 	return usecase{
 		apiRecognition: api,
 		apiPlants:      apiPlants,
+		plantsUsecase:  plantsUsecase,
 	}
 }
 
@@ -30,15 +33,15 @@ func (u usecase) Recognize(
 	ctx context.Context,
 	formdata *multipart.Form,
 	project string,
-) ([]models.Plant, error) {
+) ([]models.XiaomiPlant, error) {
 	recognized, err := u.apiRecognition.Recognize(ctx, formdata, models.Project(project))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to recognize images")
 	}
 
-	plants := make([]models.Plant, 0)
+	plants := make([]models.XiaomiPlant, 0)
 	for _, plant := range recognized {
-		found, err := u.apiPlants.SearchByName(ctx, plant.CommonName)
+		found, err := u.plantsUsecase.GetPlantByName(plant.CommonName)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to search plant")
 		}

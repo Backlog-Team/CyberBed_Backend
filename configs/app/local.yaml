@@ -9,7 +9,6 @@ database:
   port: 5432
   sslmode: "disable"
   init_db:
-    init: true
     path_to_dir: "migrations/plant-database/json"
 
 logger_level: "debug"
@@ -19,16 +18,13 @@ recognize_api:
   base_url: "https://my-api.plantnet.org/v2/identify/"
   count_results: 5
   image_field: "images"
-  token: "2b109QtPNL155fUgf3usDHvsk"
 
 trefle_api:
   base_url: "https://trefle.io/api/v1/plants/"
   count_plants: 20
-  token: "lFS3BajmCiFb4Qn20NFwLlCg8VGQh8BFboWuratD5qw"
 
 perenual_api:
   base_url: "https://www.perenual.com/api"
-  token: "sk-2Szd653289133ea802582"
 
 cookie_settings:
   secure: "true"

@@ -22,7 +22,7 @@ type Usecase interface {
 		ctx context.Context,
 		formdata *multipart.Form,
 		project string,
-	) ([]models.Plant, error)
+	) ([]models.XiaomiPlant, error)
 }
 
 type Handler interface {

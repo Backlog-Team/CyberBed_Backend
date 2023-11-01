@@ -60,7 +60,7 @@ type CookieSettings struct {
 	} `yaml:"expire_date"`
 }
 
-func New() *Config {
+func New(isInitDB bool) *Config {
 	return &Config{
 		Server: struct {
 			Address string `yaml:"address"`
@@ -102,7 +102,7 @@ func New() *Config {
 				Init      bool
 				PathToDir string
 			}{
-				Init:      true,
+				Init:      isInitDB,
 				PathToDir: getPwd() + "migrations/plant-database/json",
 			},
 		}),
@@ -124,7 +124,7 @@ func New() *Config {
 			BaseURL:      "https://my-api.plantnet.org/v2/identify/",
 			CountResults: 4,
 			ImageField:   "images[]",
-			Token:        "token",
+			Token:        os.Getenv("RECOGNIZE_API_TOKEN"),
 		}),
 		TrefleAPI: struct {
 			BaseURL     string `yaml:"base_url"`
@@ -137,7 +137,7 @@ func New() *Config {
 		}{
 			BaseURL:     "https://{defaultHost}/api/v1/plants/",
 			CountPlants: 5,
-			Token:       "token",
+			Token:       os.Getenv("TREFLE_API_TOKEN"),
 		}),
 		PerenualAPI: struct {
 			BaseURL string `yaml:"base_url"`
@@ -147,7 +147,7 @@ func New() *Config {
 			Token   string
 		}{
 			BaseURL: "https://{defaultHost}/api/v1/plants/",
-			Token:   "token",
+			Token:   os.Getenv("PERENUAL_API_TOKEN"),
 		}),
 		CookieSettings: struct {
 			Secure     bool `yaml:"secure"`
@@ -206,8 +206,9 @@ func (c *Config) FormatDbAddr() string {
 	)
 }
 
-func ParseFlag(path *string) {
-	flag.StringVar(path, "ConfigPath", "configs/setup.yaml", "Path to Config")
+func ParseFlag(path *string, isInit *bool) {
+	flag.StringVar(path, "ConfigPath", "configs/app/local.yaml", "Path to Config")
+	flag.BoolVar(isInit, "InitDB", false, "Needs to init DB with plants content")
 }
 
 func getPwd() string {

@@ -21,13 +21,6 @@ func newPostgres(url string) (*Postgres, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(
-		&models.XiaomiPlant{},
-		&models.XiaomiPlantBasic{},
-		&models.XiaomiPlantMaintenance{},
-		&models.XiaomiPlantPrameter{},
-	)
-
 	return &Postgres{
 		DB: db,
 	}, nil

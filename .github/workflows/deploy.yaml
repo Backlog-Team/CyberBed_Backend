@@ -27,6 +27,13 @@ jobs:
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_KEY }}
       script: |
-        sudo docker rm $(sudo docker ps -aq)
-        sudo docker rmi $(sudo docker images -aq)
-        sudo docker pull backlog/cyber-bed
+        sudo docker rm -f $(sudo docker ps -aq)
+        sudo docker rmi -f $(sudo docker images -aq)
+        sudo docker volume rm -f $(sudo docker volume ls -q)
+
+        export RECOGNIZE_API_TOKEN=${{ secrets.RECOGNIZE_API_TOKEN }}
+        export TREFLE_API_TOKEN=${{ secrets.TREFLE_API_TOKEN }}
+        export PERENUAL_API_TOKEN=${{ secrets.PERENUAL_API_TOKEN }}
+
+        sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-image
+        sudo docker compose up -d

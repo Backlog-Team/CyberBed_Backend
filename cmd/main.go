@@ -12,10 +12,11 @@ import (
 
 func main() {
 	var configPath string
-	config.ParseFlag(&configPath)
+	var isInitDB bool
+	config.ParseFlag(&configPath, &isInitDB)
 	flag.Parse()
 
-	cfg := config.New()
+	cfg := config.New(isInitDB)
 	if err := cfg.Open(configPath); err != nil {
 		log.Fatal("Failed to open config file")
 	}

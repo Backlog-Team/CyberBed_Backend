@@ -1,4 +1,4 @@
-name: actions
+name: CI
 on: [push]
 
 jobs:
@@ -29,6 +29,7 @@ jobs:
           args: -c configs/.golangci.yaml
 
   docker-push:
+    name: Build and push container
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -129,7 +129,7 @@ func (s *Server) MakeUsecases() {
 	s.authUsecase = authUsecase.NewAuthUsecase(authDB, usersDB, s.Config.CookieSettings)
 	s.usersUsecase = usersUsecase.NewUsersUsecase(usersDB)
 	s.plantsUsecase = plantsUsecase.NewPlansUsecase(plantsDB, s.plantsAPI)
-	s.recUsecase = recUsecase.New(recognitionAPI, s.plantsAPI)
+	s.recUsecase = recUsecase.New(recognitionAPI, s.plantsAPI, s.plantsUsecase)
 }
 
 func (s *Server) MakeRouter() {

@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS sessions;
-DROP TABLE IF EXISTS users_info;
+DROP TABLE IF EXISTS cookies;
 DROP TABLE IF EXISTS user_plants;
 DROP TABLE IF EXISTS users;
 
