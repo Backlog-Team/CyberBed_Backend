@@ -37,7 +37,7 @@ jobs:
             export TREFLE_API_TOKEN=${{ secrets.TREFLE_API_TOKEN }}
             export PERENUAL_API_TOKEN=${{ secrets.PERENUAL_API_TOKEN }}
 
-            if [ $IS_INIT_DB ];
+            if [ "$IS_INIT_DB" = "true" ]; then
               git clone https://github.com/vrachieru/plant-database.git
             fi
 
