@@ -6,8 +6,11 @@ services:
     image: milchenko/cyberbed-image
     ports:
       - "8080:8080"
+    env_file:
+      - .env.prod
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ~/plant-database:/root/plant-database
     networks:
