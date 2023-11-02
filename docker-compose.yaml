@@ -28,8 +28,6 @@ services:
       POSTGRES_DB: cyber_garden
       POSTGRES_PASSWORD: admin
       DATABASE_HOST: postgres
-    ports:
-      - "5432"
     networks:
       - server
 
