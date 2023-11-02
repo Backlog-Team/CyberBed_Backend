@@ -9,7 +9,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ~/plant-database:/root/configs
+      - ~/plant-database:/root/plant-database
     networks:
       - server
 
