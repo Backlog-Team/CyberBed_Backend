@@ -15,8 +15,8 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=BUILDER /github.com/cyber_bed/bin/server .
-COPY --from=BUILDER /github.com/cyber_bed/configs/app/deploy.yaml configs/deploy.yaml
+COPY --from=BUILDER /github.com/cyber_bed/configs/ configs/
 
 EXPOSE 8080
 
-CMD ["./server", "-ConfigPath=configs/deploy.yaml", "-InitDB=true"]
+CMD ["./server", "-ConfigPath=configs/app/deploy.yaml", "-InitDB=true"]
