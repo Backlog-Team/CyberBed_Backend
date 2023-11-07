@@ -3,27 +3,48 @@ package migrations
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 	"os"
 
-	translator "github.com/turk/free-google-translate"
-
 	"github.com/cyber_bed/internal/models"
+	"github.com/cyber_bed/internal/utils/translator"
 )
 
-func Translate(text string) (string, error) {
-	if text == "" {
-		return "", nil
-	}
+const (
+	pathToDir = "/home/milchenko/technopark/fourth_semestr/CyberBed_Backend/migrations/plant-database/json_rus/"
+)
 
-	client := http.Client{}
-	t := translator.NewTranslator(&client)
-	result, err := t.Translate(text, "en", "ru")
+func EditField() error {
+	entries, err := os.ReadDir(pathToDir)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return result, nil
+	for plantIndx, e := range entries {
+		content, err := os.ReadFile(pathToDir + e.Name())
+		if err != nil {
+			return err
+		}
+		var plantItem models.XiaomiPlant
+		json.Unmarshal(content, &plantItem)
+
+		plantItem.Basic.FloralLanguage, err = translator.Translate(plantItem.Basic.FloralLanguage)
+		if err != nil {
+			return err
+		}
+
+		contentToWrite, err := json.Marshal(plantItem)
+		if err != nil {
+			return err
+		}
+
+		if err = os.WriteFile(pathToDir+e.Name(), contentToWrite, 0644); err != nil {
+			return err
+		}
+
+		log.Printf("Edited %d files", plantIndx+1)
+	}
+
+	return nil
 }
 
 func TranslatePlants(pathToDir string) error {
@@ -48,52 +69,54 @@ func TranslatePlants(pathToDir string) error {
 		var plantItem models.XiaomiPlant
 		json.Unmarshal(content, &plantItem)
 
-		plantItem.DisplayPid, err = Translate(plantItem.DisplayPid)
+		plantItem.DisplayPid, err = translator.Translate(plantItem.DisplayPid)
 		if err != nil {
 			return err
 		}
-		plantItem.Basic.Origin, err = Translate(plantItem.Basic.Origin)
+		plantItem.Basic.Origin, err = translator.Translate(plantItem.Basic.Origin)
 		if err != nil {
 			return err
 		}
-		plantItem.Basic.Production, err = Translate(plantItem.Basic.Production)
+		plantItem.Basic.Production, err = translator.Translate(plantItem.Basic.Production)
 		if err != nil {
 			return err
 		}
-		plantItem.Basic.Category, err = Translate(plantItem.Basic.Category)
+		plantItem.Basic.Category, err = translator.Translate(plantItem.Basic.Category)
 		if err != nil {
 			return err
 		}
-		plantItem.Basic.Blooming, err = Translate(plantItem.Basic.Blooming)
+		plantItem.Basic.Blooming, err = translator.Translate(plantItem.Basic.Blooming)
 		if err != nil {
 			return err
 		}
-		plantItem.Basic.Color, err = Translate(plantItem.Basic.Color)
+		plantItem.Basic.Color, err = translator.Translate(plantItem.Basic.Color)
 		if err != nil {
 			return err
 		}
 
-		plantItem.Maintenance.Size, err = Translate(plantItem.Maintenance.Size)
+		plantItem.Maintenance.Size, err = translator.Translate(plantItem.Maintenance.Size)
 		if err != nil {
 			return err
 		}
-		plantItem.Maintenance.Soil, err = Translate(plantItem.Maintenance.Soil)
+		plantItem.Maintenance.Soil, err = translator.Translate(plantItem.Maintenance.Soil)
 		if err != nil {
 			return err
 		}
-		plantItem.Maintenance.Sunlight, err = Translate(plantItem.Maintenance.Sunlight)
+		plantItem.Maintenance.Sunlight, err = translator.Translate(plantItem.Maintenance.Sunlight)
 		if err != nil {
 			return err
 		}
-		plantItem.Maintenance.Watering, err = Translate(plantItem.Maintenance.Watering)
+		plantItem.Maintenance.Watering, err = translator.Translate(plantItem.Maintenance.Watering)
 		if err != nil {
 			return err
 		}
-		plantItem.Maintenance.Fertilization, err = Translate(plantItem.Maintenance.Fertilization)
+		plantItem.Maintenance.Fertilization, err = translator.Translate(
+			plantItem.Maintenance.Fertilization,
+		)
 		if err != nil {
 			return err
 		}
-		plantItem.Maintenance.Pruning, err = Translate(plantItem.Maintenance.Pruning)
+		plantItem.Maintenance.Pruning, err = translator.Translate(plantItem.Maintenance.Pruning)
 		if err != nil {
 			return err
 		}

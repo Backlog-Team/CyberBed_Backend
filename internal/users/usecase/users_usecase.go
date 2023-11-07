@@ -4,9 +4,9 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/cyber_bed/internal/crypto"
 	"github.com/cyber_bed/internal/domain"
 	"github.com/cyber_bed/internal/models"
+	"github.com/cyber_bed/internal/utils/crypto"
 )
 
 type UsersUsecase struct {
