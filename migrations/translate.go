@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/turk/free-google-translate"
+	translator "github.com/turk/free-google-translate"
 
 	"github.com/cyber_bed/internal/models"
 )
