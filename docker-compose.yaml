@@ -33,7 +33,7 @@ services:
       DATABASE_HOST: postgres
     volumes:
       - data:/var/lib/postgresql/data
-      - ~/backup/dump.sql:/docker-entrypoint-initdb.d/init.sql
+      - ~/backup/dump.sql:/docker-entrypoint-initdb.d
     networks:
       - server
 
