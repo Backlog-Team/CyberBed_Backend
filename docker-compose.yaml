@@ -31,8 +31,6 @@ services:
       POSTGRES_DB: cyber_garden
       POSTGRES_PASSWORD: admin
       DATABASE_HOST: postgres
-    volumes:
-      - ~/backup/dump.sql:/docker-entrypoint-initdb.d/dump.sql
     networks:
       - server
 
