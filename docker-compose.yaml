@@ -31,9 +31,9 @@ services:
       POSTGRES_DB: cyber_garden
       POSTGRES_PASSWORD: admin
       DATABASE_HOST: postgres
-    volumes:
-      - data:/var/lib/postgresql/data
-      - ~/backup/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    # volumes:
+    #   - data:/var/lib/postgresql/data
+    #   - ~/backup/dump.sql:/docker-entrypoint-initdb.d/dump.sql
     networks:
       - server
 
@@ -42,7 +42,6 @@ networks:
     driver: bridge
     name: "server"
     external: false
-
-volumes:
-  data:
-    driver: local
+# volumes:
+#   data:
+#     driver: local
