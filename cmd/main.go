@@ -12,8 +12,7 @@ import (
 
 func main() {
 	var configPath string
-	var isInitDB bool
-	config.ParseFlag(&configPath, &isInitDB)
+	config.ParseFlag(&configPath)
 	flag.Parse()
 
 	cfg := config.New()

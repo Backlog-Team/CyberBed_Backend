@@ -19,4 +19,4 @@ COPY --from=BUILDER /github.com/cyber_bed/configs/ configs/
 
 EXPOSE 8080
 
-CMD ["./server", "-ConfigPath", "configs/app/deploy.yaml", "-InitDB", "true"]
+CMD ["./server", "-ConfigPath", "configs/app/deploy.yaml"]

@@ -209,9 +209,8 @@ func (c *Config) FormatDbAddr() string {
 	)
 }
 
-func ParseFlag(path *string, isInit *bool) {
+func ParseFlag(path *string) {
 	flag.StringVar(path, "ConfigPath", "configs/app/local.yaml", "Path to Config")
-	flag.BoolVar(isInit, "InitDB", false, "Needs to init DB with plants content")
 }
 
 func getPwd() string {
