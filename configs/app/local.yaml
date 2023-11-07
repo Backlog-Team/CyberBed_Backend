@@ -11,6 +11,8 @@ database:
   init_db:
     path_to_dir: "migrations/plant-database/json"
 
+translate_mode: false
+
 logger_level: "debug"
 
 recognize_api:

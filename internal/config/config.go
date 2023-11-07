@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	address     = "localhost"
-	port        = 8080
-	loggerLevel = "debug"
+	address       = "localhost"
+	port          = 8080
+	loggerLevel   = "debug"
+	translateMode = false
 )
 
 type Config struct {
@@ -30,8 +31,9 @@ type Config struct {
 			PathToDir string `yaml:"path_to_dir"`
 		} `yaml:"init_db"`
 	} `yaml:"database"`
-	LoggerLvl    string `yaml:"logger_level"`
-	RecognizeAPI struct {
+	TranslateMode bool   `yaml:"translate_mode"`
+	LoggerLvl     string `yaml:"logger_level"`
+	RecognizeAPI  struct {
 		MaxImages    int    `yaml:"max_images"`
 		BaseURL      string `yaml:"base_url"`
 		CountResults int    `yaml:"count_results"`
@@ -60,7 +62,7 @@ type CookieSettings struct {
 	} `yaml:"expire_date"`
 }
 
-func New(isInitDB bool) *Config {
+func New() *Config {
 	return &Config{
 		Server: struct {
 			Address string `yaml:"address"`
@@ -102,11 +104,12 @@ func New(isInitDB bool) *Config {
 				Init      bool
 				PathToDir string
 			}{
-				Init:      isInitDB,
-				PathToDir: getPwd() + "migrations/plant-database/json",
+				Init:      false,
+				PathToDir: getPwd() + "/migrations/plant-database/json",
 			},
 		}),
-		LoggerLvl: loggerLevel,
+		TranslateMode: translateMode,
+		LoggerLvl:     loggerLevel,
 		RecognizeAPI: struct {
 			MaxImages    int    `yaml:"max_images"`
 			BaseURL      string `yaml:"base_url"`

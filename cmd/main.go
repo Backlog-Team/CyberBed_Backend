@@ -16,12 +16,10 @@ func main() {
 	config.ParseFlag(&configPath, &isInitDB)
 	flag.Parse()
 
-	cfg := config.New(isInitDB)
+	cfg := config.New()
 	if err := cfg.Open(configPath); err != nil {
 		log.Print("Failed to open config file")
 	}
-	log.Print(cfg.Database.InitDB.PathToDir)
-	log.Print(cfg.Database.InitDB.Init)
 
 	e := echo.New()
 	app := app.New(e, cfg)

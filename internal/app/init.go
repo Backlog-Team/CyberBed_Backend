@@ -69,6 +69,12 @@ func (s *Server) init() {
 			s.Echo.Logger.Error(err)
 		}
 	}
+
+	if s.Config.TranslateMode {
+		if err := migrations.TranslatePlants(s.Config.Database.InitDB.PathToDir); err != nil {
+			s.Echo.Logger.Error(err)
+		}
+	}
 }
 
 func (s *Server) Start() error {

@@ -12,7 +12,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ~/plant-database:/root/plant-database
+      - ~/migrations:/root/plant-database
     networks:
       - server
 
