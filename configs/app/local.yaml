@@ -9,7 +9,8 @@ database:
   port: 5432
   sslmode: "disable"
   init_db:
-    path_to_dir: "migrations/plant-database/json"
+    path_to_dir: "migrations/plant-database/json_rus"
+    init: false
 
 translate_mode: false
 

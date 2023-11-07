@@ -1,10 +1,11 @@
 package plantsRepository
 
 import (
+	"strings"
+
 	"github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"strings"
 
 	"github.com/cyber_bed/internal/models"
 )
@@ -107,7 +108,7 @@ func (db *Postgres) GetByPlantName(plantName string) ([]models.XiaomiPlant, erro
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
 		Preload("Parameter").
-		Where("pid LIKE ?", "%"+strings.ToLower(plantName)+"%").
+		Where("plant_id LIKE ?", "%"+strings.ToLower(plantName)+"%").
 		Limit(10).
 		Find(&plants).Error; err != nil {
 		return nil, err
