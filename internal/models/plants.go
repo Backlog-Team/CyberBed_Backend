@@ -26,7 +26,7 @@ type Plant struct {
 type XiaomiPlant struct {
 	gorm.Model
 	ID          uint64
-	PlantID     string                 `json:"pid"`
+	PlantID     string                 `json:"pid"         gorm:"uniqueIndex"`
 	Basic       XiaomiPlantBasic       `json:"basic"       gorm:"foreignkey:XiaomiPlantID;association_foreignkey:ID"`
 	DisplayPid  string                 `json:"display_pid" gorm:"index"`
 	Maintenance XiaomiPlantMaintenance `json:"maintenance" gorm:"foreignkey:XiaomiPlantID;association_foreignkey:ID"`
