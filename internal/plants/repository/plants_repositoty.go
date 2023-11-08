@@ -1,10 +1,13 @@
 package plantsRepository
 
 import (
-	"github.com/cyber_bed/internal/models"
+	"strings"
+
 	"github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/cyber_bed/internal/models"
 )
 
 type Postgres struct {
@@ -16,6 +19,14 @@ func NewPostgres(url string) (*Postgres, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	db.AutoMigrate(
+		&models.XiaomiPlant{},
+		&models.XiaomiPlantBasic{},
+		&models.XiaomiPlantMaintenance{},
+		&models.XiaomiPlantPrameter{},
+		&models.UserPlants{},
+	)
 
 	return &Postgres{
 		DB: db,
@@ -58,7 +69,7 @@ func (db *Postgres) AddUserPlantsRelations(userID uint64, plantsID []int64) erro
 	return nil
 }
 
-func (db *Postgres) GetPlantsByID(userID uint64) (models.UserPlants, error) {
+func (db *Postgres) GetPlantsByUserID(userID uint64) (models.UserPlants, error) {
 	var pl models.UserPlants
 	if err := db.DB.Table(models.PlantsTable).
 		Select("*").
@@ -69,4 +80,55 @@ func (db *Postgres) GetPlantsByID(userID uint64) (models.UserPlants, error) {
 	}
 
 	return pl, nil
+}
+
+func (db *Postgres) UpdateUserPlantsRelation(relation models.UserPlants) error {
+	if err := db.DB.Table(models.PlantsTable).
+		Where("user_id = ?", relation.UserID).
+		Update("plants_id", &relation.PlantsID).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *Postgres) GetPlantByID(plantID uint64) (models.XiaomiPlant, error) {
+	var plant models.XiaomiPlant
+	if err := db.DB.Preload("Basic").
+		Preload("Maintenance").
+		Preload("Parameter").
+		Where("xiaomi_plants.id = ?", plantID).
+		First(&plant).Error; err != nil {
+		return models.XiaomiPlant{}, err
+	}
+	return plant, nil
+}
+
+func (db *Postgres) GetByPlantName(plantName string) ([]models.XiaomiPlant, error) {
+	var plants []models.XiaomiPlant
+	if err := db.DB.Preload("Basic").
+		Preload("Maintenance").
+		Preload("Parameter").
+		Where("plant_id LIKE ?", "%"+strings.ToLower(plantName)+"%").
+		Limit(10).
+		Find(&plants).Error; err != nil {
+		return nil, err
+	}
+	return plants, nil
+}
+
+func (db *Postgres) GetPlantsPage(pageNum uint64) ([]models.XiaomiPlant, error) {
+	pageSize := 10
+	offset := (pageSize - 1) * int(pageNum-1)
+	var plants []models.XiaomiPlant
+	if err := db.DB.Preload("Basic").
+		Preload("Maintenance").
+		Preload("Parameter").
+		Order("id ASC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&plants).
+		Error; err != nil {
+		return nil, err
+	}
+	return plants, nil
 }

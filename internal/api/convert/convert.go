@@ -20,7 +20,10 @@ func InputRecognitionResultsToModels(results models.RecResponse, count int) []mo
 	return plants
 }
 
-func InputSearchResultsToModels(results models.SearchResponse, count int) []models.Plant {
+func InputSearchTrefleResultsToModels(
+	results models.SearchSliceResponse,
+	count int,
+) []models.Plant {
 	plants := make([]models.Plant, 0)
 	counter := 0
 
@@ -29,13 +32,49 @@ func InputSearchResultsToModels(results models.SearchResponse, count int) []mode
 			break
 		}
 
-		plants = append(plants, models.Plant{
-			ExternalID: uint64(result.ID),
-			CommonName: result.ScName,
-			ImageUrl:   result.ImageURL,
-		})
+		plants = append(plants, SearchTrefleItemToPlantModel(result))
 		counter++
 	}
 
 	return plants
+}
+
+func InputSearchPerenaulResultsToModels(
+	results models.PerenualsPlantResponse,
+	count int,
+) []models.Plant {
+	plants := make([]models.Plant, 0)
+	counter := 0
+
+	for _, result := range results.Data {
+		if counter+1 == count {
+			break
+		}
+
+		plants = append(plants, SearchItemToPlantModel(result))
+		counter++
+	}
+
+	return plants
+}
+
+func SearchTrefleItemToPlantModel(res models.ItemPlantResponse) models.Plant {
+	return models.Plant{
+		ID:             uint64(res.ID),
+		ScientificName: []string{res.ScName},
+		ImageUrl:       res.ImageURL,
+	}
+}
+
+func SearchItemToPlantModel(res models.PerenualPlant) models.Plant {
+	return models.Plant{
+		ID:             uint64(res.ID),
+		CommonName:     res.CommonName,
+		ImageUrl:       res.ImageURL.URL,
+		ScientificName: res.ScientificName,
+		OtherName:      res.OtherName,
+		Cycle:          res.Cycle,
+		Watering:       res.Watering,
+		Sunlight:       []interface{}{res.Sunlight},
+	}
 }

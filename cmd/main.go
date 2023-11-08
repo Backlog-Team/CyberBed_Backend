@@ -4,10 +4,10 @@ import (
 	"flag"
 	"log"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/cyber_bed/internal/app"
 	"github.com/cyber_bed/internal/config"
-
-	"github.com/labstack/echo/v4"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 
 	cfg := config.New()
 	if err := cfg.Open(configPath); err != nil {
-		log.Fatal("Failed to open config file")
+		log.Print("Failed to open config file")
 	}
 
 	e := echo.New()

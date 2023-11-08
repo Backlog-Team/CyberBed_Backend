@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/cyber_bed/internal/config"
 	"github.com/cyber_bed/internal/domain"
 	"github.com/cyber_bed/internal/models"
-
-	"github.com/labstack/echo/v4"
 )
 
 type AuthHandler struct {
@@ -42,12 +42,7 @@ func (h AuthHandler) Auth(c echo.Context) error {
 	}
 
 	if err = h.authUsecase.Auth(cookie.Value); err != nil {
-		// If session doesn't exist, create this
-		sessionID, err := h.authUsecase.SignUpByID(userID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, err)
-		}
-		c.SetCookie(h.makeHTTPCookie(sessionID))
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
 
 	return c.JSON(http.StatusOK, models.UserID{
@@ -59,9 +54,6 @@ func (h AuthHandler) SignUp(c echo.Context) error {
 	var recievedUser models.User
 	if err := c.Bind(&recievedUser); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-
-	if _, err := h.usersUsecase.GetByUsername(recievedUser.Username); err == nil {
 	}
 
 	userID, err := h.usersUsecase.CreateUser(recievedUser)

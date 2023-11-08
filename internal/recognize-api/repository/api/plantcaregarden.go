@@ -3,15 +3,17 @@ package postgres
 import (
 	"bytes"
 	"context"
-	"github.com/carlmjohnson/requests"
-	"github.com/cyber_bed/internal/api/convert"
-	"github.com/cyber_bed/internal/models"
-	domain "github.com/cyber_bed/internal/recognize-api"
-	"github.com/pkg/errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
+
+	"github.com/carlmjohnson/requests"
+	"github.com/pkg/errors"
+
+	"github.com/cyber_bed/internal/api/convert"
+	"github.com/cyber_bed/internal/models"
+	domain "github.com/cyber_bed/internal/recognize-api"
 )
 
 type RecognitionAPI struct {

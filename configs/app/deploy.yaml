@@ -1,13 +1,16 @@
 server:
-  address: "localhost"
+  address: "0.0.0.0"
   port: 8080
 
 database:
-  user: "al.kashapov"
+  user: "postgres"
   dbname: "cyber_garden"
-  host: "localhost"
+  host: "postgres"
   port: 5432
   sslmode: "disable"
+  init_db:
+    path_to_dir: "plant-database/json"
+    init: false
 
 logger_level: "debug"
 
@@ -16,12 +19,13 @@ recognize_api:
   base_url: "https://my-api.plantnet.org/v2/identify/"
   count_results: 5
   image_field: "images"
-  token: "2b109QtPNL155fUgf3usDHvsk"
 
 trefle_api:
   base_url: "https://trefle.io/api/v1/plants/"
-  count_plants: 5
-  token: "lFS3BajmCiFb4Qn20NFwLlCg8VGQh8BFboWuratD5qw"
+  count_plants: 20
+
+perenual_api:
+  base_url: "https://www.perenual.com/api"
 
 cookie_settings:
   secure: "true"

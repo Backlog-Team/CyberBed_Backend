@@ -1,9 +1,10 @@
 package authRepository
 
 import (
-	"github.com/cyber_bed/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/cyber_bed/internal/models"
 )
 
 type Postgres struct {
@@ -15,6 +16,8 @@ func NewPostgres(url string) (*Postgres, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	db.AutoMigrate(models.Cookie{})
 
 	return &Postgres{
 		DB: db,

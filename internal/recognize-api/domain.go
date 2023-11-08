@@ -2,9 +2,11 @@ package domain
 
 import (
 	"context"
-	"github.com/cyber_bed/internal/models"
-	"github.com/labstack/echo/v4"
 	"mime/multipart"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/cyber_bed/internal/models"
 )
 
 type API interface {
@@ -20,7 +22,7 @@ type Usecase interface {
 		ctx context.Context,
 		formdata *multipart.Form,
 		project string,
-	) ([]models.Plant, error)
+	) ([]models.XiaomiPlant, error)
 }
 
 type Handler interface {

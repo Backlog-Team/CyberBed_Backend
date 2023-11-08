@@ -1,0 +1,46 @@
+version: "3.3"
+services:
+  backend:
+    hostname: app
+    container_name: cyberbed-image
+    image: milchenko/cyberbed-image
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ~/migrations:/root/plant-database
+    networks:
+      - server
+
+  postgres:
+    hostname: postgres
+    container_name: postgresql
+    image: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cyber_garden"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: cyber_garden
+      POSTGRES_PASSWORD: admin
+      DATABASE_HOST: postgres
+    volumes:
+      - data:/var/lib/postgresql/data
+    networks:
+      - server
+
+volumes:
+  data:
+
+networks:
+  server:
+    driver: bridge
+    name: "server"
+    external: false

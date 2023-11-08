@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	address     = "localhost"
-	port        = 8080
-	loggerLevel = "debug"
+	address       = "localhost"
+	port          = 8080
+	loggerLevel   = "debug"
+	translateMode = false
 )
 
 type Config struct {
@@ -25,9 +26,14 @@ type Config struct {
 		Host    string `yaml:"host"`
 		Port    uint64 `yaml:"port"`
 		SslMode string `yaml:"sslmode"`
+		InitDB  struct {
+			Init      bool   `yaml:"init"`
+			PathToDir string `yaml:"path_to_dir"`
+		} `yaml:"init_db"`
 	} `yaml:"database"`
-	LoggerLvl    string `yaml:"logger_level"`
-	RecognizeAPI struct {
+	TranslateMode bool   `yaml:"translate_mode"`
+	LoggerLvl     string `yaml:"logger_level"`
+	RecognizeAPI  struct {
 		MaxImages    int    `yaml:"max_images"`
 		BaseURL      string `yaml:"base_url"`
 		CountResults int    `yaml:"count_results"`
@@ -39,6 +45,10 @@ type Config struct {
 		CountPlants int    `yaml:"count_plants"`
 		Token       string `yaml:"token"`
 	} `yaml:"trefle_api"`
+	PerenualAPI struct {
+		BaseURL string `yaml:"base_url"`
+		Token   string `yaml:"token"`
+	} `yaml:"perenual_api"`
 	CookieSettings CookieSettings
 }
 
@@ -70,20 +80,36 @@ func New() *Config {
 			Host    string `yaml:"host"`
 			Port    uint64 `yaml:"port"`
 			SslMode string `yaml:"sslmode"`
+			InitDB  struct {
+				Init      bool   `yaml:"init"`
+				PathToDir string `yaml:"path_to_dir"`
+			} `yaml:"init_db"`
 		}(struct {
 			User    string
 			DbName  string
 			Host    string
 			Port    uint64
 			SslMode string
+			InitDB  struct {
+				Init      bool
+				PathToDir string
+			}
 		}{
 			User:    "postgres",
 			DbName:  "cyber_garden",
 			Host:    "localhost",
 			Port:    5432,
 			SslMode: "disable",
+			InitDB: struct {
+				Init      bool
+				PathToDir string
+			}{
+				Init:      false,
+				PathToDir: getPwd() + "/migrations/plant-database/json",
+			},
 		}),
-		LoggerLvl: loggerLevel,
+		TranslateMode: translateMode,
+		LoggerLvl:     loggerLevel,
 		RecognizeAPI: struct {
 			MaxImages    int    `yaml:"max_images"`
 			BaseURL      string `yaml:"base_url"`
@@ -101,7 +127,7 @@ func New() *Config {
 			BaseURL:      "https://my-api.plantnet.org/v2/identify/",
 			CountResults: 4,
 			ImageField:   "images[]",
-			Token:        "token",
+			Token:        os.Getenv("RECOGNIZE_API_TOKEN"),
 		}),
 		TrefleAPI: struct {
 			BaseURL     string `yaml:"base_url"`
@@ -114,7 +140,17 @@ func New() *Config {
 		}{
 			BaseURL:     "https://{defaultHost}/api/v1/plants/",
 			CountPlants: 5,
-			Token:       "token",
+			Token:       os.Getenv("TREFLE_API_TOKEN"),
+		}),
+		PerenualAPI: struct {
+			BaseURL string `yaml:"base_url"`
+			Token   string `yaml:"token"`
+		}(struct {
+			BaseURL string
+			Token   string
+		}{
+			BaseURL: "https://{defaultHost}/api/v1/plants/",
+			Token:   os.Getenv("PERENUAL_API_TOKEN"),
 		}),
 		CookieSettings: struct {
 			Secure     bool `yaml:"secure"`
@@ -164,15 +200,20 @@ func (c *Config) Open(path string) error {
 
 func (c *Config) FormatDbAddr() string {
 	return fmt.Sprintf(
-		"user=%s dbname=%s host=%s port=%d sslmode=%s",
+		"host=%s user=%s password=admin dbname=%s port=%d sslmode=%s",
+		c.Database.Host,
 		c.Database.User,
 		c.Database.DbName,
-		c.Database.Host,
 		c.Database.Port,
 		c.Database.SslMode,
 	)
 }
 
 func ParseFlag(path *string) {
-	flag.StringVar(path, "ConfigPath", "configs/setup.yaml", "Path to Config")
+	flag.StringVar(path, "ConfigPath", "configs/app/local.yaml", "Path to Config")
+}
+
+func getPwd() string {
+	pwd, _ := os.Getwd()
+	return pwd
 }

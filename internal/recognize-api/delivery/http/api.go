@@ -1,11 +1,13 @@
 package http
 
 import (
-	"github.com/cyber_bed/internal/models"
-	domain "github.com/cyber_bed/internal/recognize-api"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
-	"net/http"
+
+	"github.com/cyber_bed/internal/models"
+	domain "github.com/cyber_bed/internal/recognize-api"
 )
 
 type RecognitionHandler struct {
@@ -24,7 +26,11 @@ func (r *RecognitionHandler) Recognize(c echo.Context) error {
 		return errors.Wrap(err, "failed to export formdata")
 	}
 
-	recognize, err := r.usecase.Recognize(c.Request().Context(), formdata, string(models.AllProject))
+	recognize, err := r.usecase.Recognize(
+		c.Request().Context(),
+		formdata,
+		string(models.AllProject),
+	)
 	if err != nil {
 		return errors.Wrap(err, "failed to recognize plant")
 	}

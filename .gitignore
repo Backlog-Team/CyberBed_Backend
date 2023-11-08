@@ -1,1 +1,5 @@
 .idea
+.env
+bin/
+/*/plant-database/
+/*/dump.sql
