@@ -22,15 +22,12 @@ jobs:
           rm: true
       - name: executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@master
-        env:
-          IS_INIT_DB: true
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
             docker rm -f $(docker ps -aq)
-            docker rmi -f $(docker images -aq)
 
             export RECOGNIZE_API_TOKEN=${{ secrets.RECOGNIZE_API_TOKEN }}
             export TREFLE_API_TOKEN=${{ secrets.TREFLE_API_TOKEN }}
@@ -38,5 +35,4 @@ jobs:
             echo 'RECOGNIZE_API_TOKEN=$RECOGNIZE_API_TOKEN\nTREFLE_API_TOKEN=$TREFLE_API_TOKEN\nPERENUAL_API_TOKEN=$PERENUAL_API_TOKEN' > ~/backend/.env.prod
 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-image
-            cd ~/backend 
             docker compose up -d
