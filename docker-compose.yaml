@@ -31,6 +31,8 @@ services:
       POSTGRES_DB: cyber_garden
       POSTGRES_PASSWORD: admin
       DATABASE_HOST: postgres
+    volumes:
+      - data:/var/lib/postgresql/data
     networks:
       - server
 
@@ -39,3 +41,6 @@ networks:
     driver: bridge
     name: "server"
     external: false
+
+volumes:
+  data:
