@@ -10,7 +10,7 @@ database:
   sslmode: "disable"
   init_db:
     path_to_dir: "migrations/plant-database/json_rus"
-    init: true
+    init: false
 
 translate_mode: false
 

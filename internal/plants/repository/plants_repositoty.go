@@ -108,7 +108,7 @@ func (db *Postgres) GetByPlantName(plantName string) ([]models.XiaomiPlant, erro
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
 		Preload("Parameter").
-		Where("plant_id LIKE ?", "%"+strings.ToLower(plantName)+"%").
+		Where("plant_id LIKE ? OR display_pid LIKE ?", "%"+strings.ToLower(plantName)+"%", "%"+strings.ToLower(plantName)+"%").
 		Limit(10).
 		Find(&plants).Error; err != nil {
 		return nil, err
