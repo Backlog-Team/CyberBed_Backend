@@ -28,7 +28,7 @@ perenual_api:
   base_url: "https://www.perenual.com/api"
 
 cookie_settings:
-  secure: "true"
+  secure: "false"
   http_only: "true"
   expire_date:
     years: 0
