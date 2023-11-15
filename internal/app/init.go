@@ -181,7 +181,7 @@ func (s *Server) MakeEchoLogger() {
 
 func (s *Server) makeCORS() {
 	s.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"},
+		// AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods: []string{
 			httpCORS.MethodGet,
 			httpCORS.MethodHead,
