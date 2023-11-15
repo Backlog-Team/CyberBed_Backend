@@ -75,6 +75,5 @@ func SearchItemToPlantModel(res models.PerenualPlant) models.Plant {
 		OtherName:      res.OtherName,
 		Cycle:          res.Cycle,
 		Watering:       res.Watering,
-		Sunlight:       []interface{}{res.Sunlight},
 	}
 }

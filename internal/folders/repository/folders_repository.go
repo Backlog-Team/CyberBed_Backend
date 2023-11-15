@@ -19,6 +19,7 @@ func NewPostgres(url string) (*Postgres, error) {
 
 	db.AutoMigrate(
 		&models.Folder{},
+		&models.PlantFolderRelation{},
 	)
 
 	return &Postgres{
