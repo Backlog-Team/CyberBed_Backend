@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -10,17 +12,27 @@ type UserPlants struct {
 	PlantsID pq.Int64Array `gorm:"type:integer[]"`
 }
 
+type UserPlantsInf struct {
+	PlantID      uint64
+	UserID       uint64
+	LastWatering time.Time
+}
+
+// Needs to add custom informantion of users addition
+type CustomPlant struct {
+	ID uint64
+}
+
 type Plant struct {
 	UserID   uint64 `json:"userID"`
 	ID       uint64 `json:"id"`
 	ImageUrl string `json:"imageUrl"`
 
-	CommonName     string        `json:"common_name"`
-	ScientificName []string      `json:"scientific_name"`
-	OtherName      []string      `json:"other_name"`
-	Cycle          string        `json:"cycle"`
-	Watering       string        `json:"watering"`
-	Sunlight       []interface{} `json:"sunlight"`
+	CommonName     string   `json:"common_name"`
+	ScientificName []string `json:"scientific_name"`
+	OtherName      []string `json:"other_name"`
+	Cycle          string   `json:"cycle"`
+	Watering       string   `json:"watering"`
 }
 
 type XiaomiPlant struct {
