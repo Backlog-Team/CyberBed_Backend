@@ -62,7 +62,7 @@ func (s *Server) init() {
 	s.MakeRouter()
 
 	s.MakeEchoLogger()
-	s.makeCORS()
+	// s.makeCORS()
 
 	if s.Config.Database.InitDB.Init {
 		if err := s.makeMigrations(s.Config.FormatDbAddr(), s.Config.Database.InitDB.PathToDir); err != nil {
