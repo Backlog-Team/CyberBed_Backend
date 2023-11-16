@@ -179,6 +179,7 @@ func (s *Server) MakeRouter() {
 	folders.GET("/:folderID/plants", s.foldersHandler.GetPlantsFromFolder)
 	folders.DELETE("/:folderID", s.foldersHandler.DeleteFolder)
 	folders.POST("/:folderID/plants/:plantID", s.foldersHandler.AddPlantToFolder)
+	folders.DELETE("/:folderID/plants/:plantID", s.foldersHandler.DeletePlantFromFolder)
 }
 
 func (s *Server) makeMiddlewares() {

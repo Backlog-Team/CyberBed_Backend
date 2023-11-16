@@ -31,38 +31,39 @@ func (f FoldersUsecase) CreateFolder(folder models.Folder) (uint64, error) {
 	return folderID, nil
 }
 
-func (f FoldersUsecase) GetFolderByID(id uint64) (models.Folder, error) {
+func (f FoldersUsecase) GetFolderByID(id uint64) (models.FolderHttp, error) {
 	folder, err := f.foldersRepository.GetFolder(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.Folder{}, errors.Wrapf(
+			return models.FolderHttp{}, errors.Wrapf(
 				models.ErrNotFound,
 				"Folder with id {%d} not found",
 				id,
 			)
 		}
-		return models.Folder{}, err
+		return models.FolderHttp{}, err
 	}
-	return folder, nil
+	return models.FolderGormToHttp(folder), nil
 }
 
-func (f FoldersUsecase) GetFoldersByUserID(userID uint64) ([]models.Folder, error) {
+func (f FoldersUsecase) GetFoldersByUserID(userID uint64) ([]models.FolderHttp, error) {
 	folders, err := f.foldersRepository.GetFolders(userID)
 	if err != nil {
-		return nil, err
+		return []models.FolderHttp{}, err
 	}
-	return folders, nil
+
+	httpFolders := make([]models.FolderHttp, 0)
+	for _, f := range folders {
+		httpFolders = append(httpFolders, models.FolderGormToHttp(f))
+	}
+	return httpFolders, nil
 }
 
 func (f FoldersUsecase) GetPlantsFromFolder(folderID uint64) ([]models.XiaomiPlant, error) {
 	plantsID, err := f.foldersRepository.GetPlantsID(folderID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.Wrapf(
-				models.ErrNotFound,
-				"Folder with id {%d} not found",
-				folderID,
-			)
+			return []models.XiaomiPlant{}, nil
 		}
 		return nil, err
 	}
@@ -102,4 +103,8 @@ func (f FoldersUsecase) AddPlantToFolder(folderID, plantID uint64) error {
 		}
 	}
 	return f.foldersRepository.AddPlantToFolder(folderID, plantID)
+}
+
+func (f FoldersUsecase) DeletePlantFromFolder(folderID, plantID uint64) error {
+	return f.foldersRepository.UpdateFolderPlant(folderID, plantID)
 }

@@ -63,8 +63,8 @@ func (db *Postgres) GetFolder(id uint64) (models.Folder, error) {
 }
 
 func (db *Postgres) DeleteFolder(id uint64) error {
-	if err := db.DB.Model(&models.Folder{}).
-		Delete("id = ?", id).
+	if err := db.DB.Select("Folder").
+		Delete(&models.Folder{ID: id}).
 		Error; err != nil {
 		return err
 	}
@@ -72,9 +72,8 @@ func (db *Postgres) DeleteFolder(id uint64) error {
 }
 
 func (db *Postgres) GetPlantsID(folderID uint64) ([]uint64, error) {
-	var plantIDs []int64
-	if err := db.DB.Table("plant_folder_relations").
-		Select("plants_id").
+	var plantIDs models.PlantFolderRelation
+	if err := db.DB.Model(&models.PlantFolderRelation{}).
 		Where("folder_id = ?", folderID).
 		First(&plantIDs).
 		Error; err != nil {
@@ -82,8 +81,8 @@ func (db *Postgres) GetPlantsID(folderID uint64) ([]uint64, error) {
 	}
 
 	var convertedPlants []uint64
-	for i, plant := range convertedPlants {
-		convertedPlants[i] = uint64(plant)
+	for _, plant := range plantIDs.PlantsID {
+		convertedPlants = append(convertedPlants, uint64(plant))
 	}
 
 	return convertedPlants, nil
@@ -119,6 +118,29 @@ func (db *Postgres) AddPlantToFolder(folderID, plantID uint64) error {
 }
 
 func (db *Postgres) UpdateFolderPlant(folderID, plantID uint64) error {
-	// TODO: Implement this
+	folderPlant := models.PlantFolderRelation{}
+	if err := db.DB.Model(&models.PlantFolderRelation{}).
+		Where("folder_id = ? AND plants_id @> ARRAY[?]::integer[]", folderID, plantID).
+		First(&folderPlant).
+		Error; err != nil {
+		return err
+	}
+
+	for index, pID := range folderPlant.PlantsID {
+		if uint64(pID) == plantID {
+			folderPlant.PlantsID = append(
+				folderPlant.PlantsID[:index],
+				folderPlant.PlantsID[index+1:]...,
+			)
+			break
+		}
+	}
+
+	if err := db.DB.Model(&models.PlantFolderRelation{}).
+		Where("folder_id = ?", folderID).
+		Update("plants_id", &folderPlant.PlantsID).
+		Error; err != nil {
+		return err
+	}
 	return nil
 }

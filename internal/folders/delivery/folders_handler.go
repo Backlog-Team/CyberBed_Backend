@@ -105,3 +105,19 @@ func (h FoldersHandler) AddPlantToFolder(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, models.EmptyModel{})
 }
+
+func (h FoldersHandler) DeletePlantFromFolder(c echo.Context) error {
+	folderID, err := strconv.ParseUint(c.Param("folderID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	if err := h.foldersUsecase.DeletePlantFromFolder(folderID, plantID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, models.EmptyModel{})
+}
