@@ -69,7 +69,7 @@ func (db *Postgres) GetBySessionID(sessionID string) (models.User, error) {
 	var usr models.User
 	if err := db.DB.Table("users").Model(&models.User{}).
 		Joins("JOIN cookies ON cookies.user_id=users.id").
-		Where("cookies.value = ?", sessionID).
+		Where("cookies.value = ? AND cookies.deleted_at IS NULL", sessionID).
 		First(&usr).Error; err != nil {
 		return models.User{}, err
 	}

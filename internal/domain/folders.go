@@ -8,4 +8,5 @@ type FoldersUsecase interface {
 	GetFoldersByUserID(userID uint64) ([]models.Folder, error)
 	GetPlantsFromFolder(folderID uint64) ([]models.XiaomiPlant, error)
 	DeleteFolderByID(id uint64) error
+	AddPlantToFolder(folderID, plantID uint64) error
 }

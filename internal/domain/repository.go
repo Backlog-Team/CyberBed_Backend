@@ -34,4 +34,6 @@ type FoldersRepository interface {
 	GetFolder(id uint64) (models.Folder, error)
 	DeleteFolder(id uint64) error
 	GetPlantsID(folderID uint64) ([]uint64, error)
+	AddPlantToFolder(folderID, plantID uint64) error
+	UpdateFolderPlant(folderID, plantID uint64) error
 }

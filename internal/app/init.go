@@ -15,6 +15,9 @@ import (
 	authUsecase "github.com/cyber_bed/internal/auth/usecase"
 	"github.com/cyber_bed/internal/config"
 	"github.com/cyber_bed/internal/domain"
+	foldersHandler "github.com/cyber_bed/internal/folders/delivery"
+	foldersRepository "github.com/cyber_bed/internal/folders/repository"
+	foldersUsecase "github.com/cyber_bed/internal/folders/usecase"
 	domainTrefleAPI "github.com/cyber_bed/internal/plants-api"
 	httpPlants "github.com/cyber_bed/internal/plants/delivery"
 	plantsRepository "github.com/cyber_bed/internal/plants/repository"
@@ -34,16 +37,18 @@ type Server struct {
 	Echo   *echo.Echo
 	Config *config.Config
 
-	usersUsecase  domain.UsersUsecase
-	authUsecase   domain.AuthUsecase
-	plantsUsecase domain.PlantsUsecase
-	recUsecase    domainRecognition.Usecase
-	plantsAPI     domain.PlantsAPI
+	usersUsecase   domain.UsersUsecase
+	authUsecase    domain.AuthUsecase
+	plantsUsecase  domain.PlantsUsecase
+	recUsecase     domainRecognition.Usecase
+	plantsAPI      domain.PlantsAPI
+	foldersUsecase domain.FoldersUsecase
 
-	usersHandler  httpUsers.UsersHandler
-	authHandler   httpAuth.AuthHandler
-	recHandler    domainRecognition.Handler
-	plantsHandler httpPlants.PlantsHandler
+	usersHandler   httpUsers.UsersHandler
+	authHandler    httpAuth.AuthHandler
+	recHandler     domainRecognition.Handler
+	plantsHandler  httpPlants.PlantsHandler
+	foldersHandler foldersHandler.FoldersHandler
 
 	authMiddleware *authMiddlewares.Middlewares
 }
@@ -88,6 +93,7 @@ func (s *Server) MakeHandlers() {
 	s.recHandler = http.NewHandler(s.recUsecase)
 	s.authHandler = httpAuth.NewAuthHandler(s.authUsecase, s.usersUsecase, s.Config.CookieSettings)
 	s.plantsHandler = httpPlants.NewPlantsHandler(s.plantsUsecase, s.usersUsecase, s.plantsAPI)
+	s.foldersHandler = foldersHandler.NewFoldersHandler(s.foldersUsecase, s.usersUsecase)
 }
 
 func (s *Server) MakeUsecases() {
@@ -104,6 +110,11 @@ func (s *Server) MakeUsecases() {
 	}
 
 	plantsDB, err := plantsRepository.NewPostgres(pgParams)
+	if err != nil {
+		s.Echo.Logger.Error(err)
+	}
+
+	foldersDB, err := foldersRepository.NewPostgres(pgParams)
 	if err != nil {
 		s.Echo.Logger.Error(err)
 	}
@@ -135,6 +146,7 @@ func (s *Server) MakeUsecases() {
 	s.authUsecase = authUsecase.NewAuthUsecase(authDB, usersDB, s.Config.CookieSettings)
 	s.usersUsecase = usersUsecase.NewUsersUsecase(usersDB)
 	s.plantsUsecase = plantsUsecase.NewPlansUsecase(plantsDB, s.plantsAPI)
+	s.foldersUsecase = foldersUsecase.NewFoldersUsecase(foldersDB, plantsDB)
 	s.recUsecase = recUsecase.New(recognitionAPI, s.plantsAPI, s.plantsUsecase)
 }
 
@@ -160,6 +172,13 @@ func (s *Server) MakeRouter() {
 	plants.POST("/:plantID", s.plantsHandler.CreatePlant)
 	plants.DELETE("/:plantID", s.plantsHandler.DeletePlant)
 	plants.GET("", s.plantsHandler.GetPlants)
+
+	folders := v1.Group("/folders", s.authMiddleware.LoginRequired)
+	folders.POST("", s.foldersHandler.CreateFolder)
+	folders.GET("", s.foldersHandler.GetFolders)
+	folders.GET("/:folderID/plants", s.foldersHandler.GetPlantsFromFolder)
+	folders.DELETE("/:folderID", s.foldersHandler.DeleteFolder)
+	folders.POST("/:folderID/plants/:plantID", s.foldersHandler.AddPlantToFolder)
 }
 
 func (s *Server) makeMiddlewares() {

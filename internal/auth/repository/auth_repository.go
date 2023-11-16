@@ -33,9 +33,7 @@ func (db *Postgres) CreateSession(cookie models.Cookie) (string, error) {
 }
 
 func (db *Postgres) DeleteBySessionID(sessionID string) error {
-	if err := db.DB.Table(models.SessionTable).
-		Where("value = ?", sessionID).
-		Delete(&models.Cookie{}).
+	if err := db.DB.Delete(&models.Cookie{}, "value = ?", sessionID).
 		Error; err != nil {
 		return err
 	}

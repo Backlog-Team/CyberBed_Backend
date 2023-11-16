@@ -86,8 +86,20 @@ func (f FoldersUsecase) GetPlantsFromFolder(folderID uint64) ([]models.XiaomiPla
 }
 
 func (f FoldersUsecase) DeleteFolderByID(id uint64) error {
-	if err := f.foldersRepository.DeleteFolder(id); err != nil {
-		return err
+	return f.foldersRepository.DeleteFolder(id)
+}
+
+func (f FoldersUsecase) AddPlantToFolder(folderID, plantID uint64) error {
+	if _, err := f.plantsRepository.GetPlantByID(plantID); err != nil {
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.Wrapf(models.ErrNotFound,
+					"plant with id {%d} not found",
+					plantID,
+				)
+			}
+			return err
+		}
 	}
-	return nil
+	return f.foldersRepository.AddPlantToFolder(folderID, plantID)
 }
