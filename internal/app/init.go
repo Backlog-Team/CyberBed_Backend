@@ -62,7 +62,7 @@ func (s *Server) init() {
 	s.MakeRouter()
 
 	s.MakeEchoLogger()
-	// s.makeCORS()
+	s.makeCORS()
 
 	if s.Config.Database.InitDB.Init {
 		if err := s.makeMigrations(s.Config.FormatDbAddr(), s.Config.Database.InitDB.PathToDir); err != nil {
@@ -181,7 +181,7 @@ func (s *Server) MakeEchoLogger() {
 
 func (s *Server) makeCORS() {
 	s.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		// AllowOrigins: []string{"http://localhost:3000"},
+		AllowOrigins: []string{"*"},
 		AllowMethods: []string{
 			httpCORS.MethodGet,
 			httpCORS.MethodHead,
