@@ -65,7 +65,11 @@ func (u AuthUsecase) Login(login, password string) (string, uint64, error) {
 	}
 
 	if !crypto.CheckHash(user.Password, password) {
-		return "", 0, errors.Wrapf(err, "incorrect password from user with login: %s", login)
+		return "", 0, errors.Wrapf(
+			models.ErrIncorrectPassword,
+			"incorrect password from user with login: %s",
+			login,
+		)
 	}
 
 	session, err := u.authRepository.CreateSession(u.generateCookie(user.ID))
