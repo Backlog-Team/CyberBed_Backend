@@ -1,6 +1,6 @@
 package domain
 
-import "github.com/cyber_bed/internal/models/http"
+import httpModels "github.com/cyber_bed/internal/models/http"
 
 type FoldersUsecase interface {
 	CreateFolder(folder httpModels.Folder) (uint64, error)

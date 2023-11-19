@@ -1,6 +1,6 @@
 package convert
 
-import "github.com/cyber_bed/internal/models/http"
+import httpModels "github.com/cyber_bed/internal/models/http"
 
 func InputRecognitionResultsToModels(results httpModels.RecResponse, count int) []httpModels.Plant {
 	plants := make([]httpModels.Plant, 0)
