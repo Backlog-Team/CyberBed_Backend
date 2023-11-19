@@ -11,7 +11,7 @@ import (
 
 	"github.com/cyber_bed/internal/api/convert"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
 type PerenualAPI struct {
@@ -29,9 +29,11 @@ func NewPerenualAPI(url *url.URL, token string) domain.PlantsAPI {
 	}
 }
 
-func clearPremiumItems(plantsResponse models.PerenualsPlantResponse) models.PerenualsPlantResponse {
-	var noPremiumPlants models.PerenualsPlantResponse
-	noPremiumPlants.Data = make([]models.PerenualPlant, 0)
+func clearPremiumItems(
+	plantsResponse httpModels.PerenualsPlantResponse,
+) httpModels.PerenualsPlantResponse {
+	var noPremiumPlants httpModels.PerenualsPlantResponse
+	noPremiumPlants.Data = make([]httpModels.PerenualPlant, 0)
 
 	for _, plant := range plantsResponse.Data {
 		if plant.Cycle != "Upgrade Plans To Premium/Supreme - https://www.perenual.com/subscription-api-pricing. I'm sorry" {
@@ -42,7 +44,7 @@ func clearPremiumItems(plantsResponse models.PerenualsPlantResponse) models.Pere
 	return noPremiumPlants
 }
 
-func (p *PerenualAPI) SearchByName(ctx context.Context, name string) ([]models.Plant, error) {
+func (p *PerenualAPI) SearchByName(ctx context.Context, name string) ([]httpModels.Plant, error) {
 	u := p.baseURL
 	q := u.Query()
 	q.Set("q", name)
@@ -50,7 +52,7 @@ func (p *PerenualAPI) SearchByName(ctx context.Context, name string) ([]models.P
 	u.RawQuery = q.Encode()
 	apiURL := u.JoinPath("species-list")
 
-	var resp models.PerenualsPlantResponse
+	var resp httpModels.PerenualsPlantResponse
 
 	if err := requests.
 		URL(apiURL.String()).
@@ -64,26 +66,26 @@ func (p *PerenualAPI) SearchByName(ctx context.Context, name string) ([]models.P
 	return convert.InputSearchPerenaulResultsToModels(resp, 30), nil
 }
 
-func (p *PerenualAPI) SearchByID(ctx context.Context, id uint64) (models.Plant, error) {
+func (p *PerenualAPI) SearchByID(ctx context.Context, id uint64) (httpModels.Plant, error) {
 	u := p.baseURL
 	q := u.Query()
 
 	u.RawQuery = q.Encode()
 	apiURL := u.JoinPath("species").JoinPath("details").JoinPath(strconv.FormatUint(id, 10))
 
-	var resp models.PerenualPlant
+	var resp httpModels.PerenualPlant
 
 	if err := requests.
 		URL(apiURL.String()).
 		Method(http.MethodGet).
 		ToJSON(&resp).
 		Fetch(ctx); err != nil {
-		return models.Plant{}, errors.Wrap(err, "failed to search plant by name")
+		return httpModels.Plant{}, errors.Wrap(err, "failed to search plant by name")
 	}
 	return convert.SearchItemToPlantModel(resp), nil
 }
 
-func (p *PerenualAPI) GetPage(ctx context.Context, pageNum uint64) ([]models.Plant, error) {
+func (p *PerenualAPI) GetPage(ctx context.Context, pageNum uint64) ([]httpModels.Plant, error) {
 	u := p.baseURL
 	q := u.Query()
 	q.Set("page", strconv.FormatUint(pageNum, 10))
@@ -91,7 +93,7 @@ func (p *PerenualAPI) GetPage(ctx context.Context, pageNum uint64) ([]models.Pla
 	u.RawQuery = q.Encode()
 	apiURL := u.JoinPath("species-list")
 
-	var resp models.PerenualsPlantResponse
+	var resp httpModels.PerenualsPlantResponse
 
 	if err := requests.
 		URL(apiURL.String()).

@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/cyber_bed/internal/api/convert"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 	domain "github.com/cyber_bed/internal/recognize-api"
 )
 
@@ -43,15 +43,15 @@ func NewRecognitionAPI(
 func (r *RecognitionAPI) Recognize(
 	ctx context.Context,
 	formdata *multipart.Form,
-	project models.Project,
-) ([]models.Plant, error) {
+	project httpModels.Project,
+) ([]httpModels.Plant, error) {
 	images, ok := formdata.File[r.imageField]
 	if !ok {
-		return nil, models.ErrNoImages
+		return nil, httpModels.ErrNoImages
 	}
 
 	if len(images) > 5 {
-		return nil, errors.Wrapf(models.ErrTooManyImages, "required %d", r.maxImages)
+		return nil, errors.Wrapf(httpModels.ErrTooManyImages, "required %d", r.maxImages)
 	}
 
 	var b bytes.Buffer
@@ -71,7 +71,7 @@ func (r *RecognitionAPI) Recognize(
 
 	apiURL.RawQuery = q.Encode()
 
-	var resp models.RecResponse
+	var resp httpModels.RecResponse
 
 	if err := requests.
 		URL(apiURL.String()).

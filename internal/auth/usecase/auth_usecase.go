@@ -8,7 +8,8 @@ import (
 
 	"github.com/cyber_bed/internal/config"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	gormModels "github.com/cyber_bed/internal/models/gorm"
+	httpModels "github.com/cyber_bed/internal/models/http"
 	"github.com/cyber_bed/internal/utils/crypto"
 )
 
@@ -31,8 +32,8 @@ func NewAuthUsecase(
 	}
 }
 
-func (u AuthUsecase) generateCookie(userID uint64) models.Cookie {
-	return models.Cookie{
+func (u AuthUsecase) generateCookie(userID uint64) gormModels.Cookie {
+	return gormModels.Cookie{
 		UserID: userID,
 		Value:  uuid.New().String(),
 		ExpireDate: time.Now().AddDate(
@@ -66,7 +67,7 @@ func (u AuthUsecase) Login(login, password string) (string, uint64, error) {
 
 	if !crypto.CheckHash(user.Password, password) {
 		return "", 0, errors.Wrapf(
-			models.ErrIncorrectPassword,
+			httpModels.ErrIncorrectPassword,
 			"incorrect password from user with login: %s",
 			login,
 		)

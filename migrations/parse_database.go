@@ -8,7 +8,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/cyber_bed/internal/models"
+	gormModels "github.com/cyber_bed/internal/models/gorm"
 )
 
 type Postgres struct {
@@ -44,7 +44,7 @@ func StartMigration(url, pathToDir string) error {
 			return err
 		}
 
-		var plantItem models.XiaomiPlant
+		var plantItem gormModels.XiaomiPlant
 		json.Unmarshal(content, &plantItem)
 		if err = db.createPlant(plantItem); err != nil {
 			return err
@@ -56,8 +56,8 @@ func StartMigration(url, pathToDir string) error {
 	return nil
 }
 
-func (db *Postgres) createPlant(plant models.XiaomiPlant) error {
-	err := db.DB.Model(&models.XiaomiPlant{}).Create(&plant).Error
+func (db *Postgres) createPlant(plant gormModels.XiaomiPlant) error {
+	err := db.DB.Model(&gormModels.XiaomiPlant{}).Create(&plant).Error
 	if err != nil {
 		return err
 	}

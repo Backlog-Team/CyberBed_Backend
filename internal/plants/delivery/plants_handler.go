@@ -9,7 +9,7 @@ import (
 
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 	"github.com/cyber_bed/internal/utils/decoding"
 )
 
@@ -104,7 +104,7 @@ func (h PlantsHandler) CreatePlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	var recievedPlant models.Plant
+	var recievedPlant httpModels.Plant
 	if err := c.Bind(&recievedPlant); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
@@ -115,7 +115,7 @@ func (h PlantsHandler) CreatePlant(c echo.Context) error {
 	if err := h.plantsUsecase.AddPlant(recievedPlant); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, models.EmptyModel{})
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
 
 func (h PlantsHandler) GetPlant(c echo.Context) error {
@@ -186,5 +186,5 @@ func (h PlantsHandler) DeletePlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, models.EmptyModel{})
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }

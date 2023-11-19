@@ -1,9 +1,9 @@
 package convert
 
-import "github.com/cyber_bed/internal/models"
+import "github.com/cyber_bed/internal/models/http"
 
-func InputRecognitionResultsToModels(results models.RecResponse, count int) []models.Plant {
-	plants := make([]models.Plant, 0)
+func InputRecognitionResultsToModels(results httpModels.RecResponse, count int) []httpModels.Plant {
+	plants := make([]httpModels.Plant, 0)
 	counter := 0
 
 	for _, result := range results.Results {
@@ -11,7 +11,7 @@ func InputRecognitionResultsToModels(results models.RecResponse, count int) []mo
 			break
 		}
 
-		plants = append(plants, models.Plant{
+		plants = append(plants, httpModels.Plant{
 			CommonName: result.Species.Name,
 		})
 		counter++
@@ -21,10 +21,10 @@ func InputRecognitionResultsToModels(results models.RecResponse, count int) []mo
 }
 
 func InputSearchTrefleResultsToModels(
-	results models.SearchSliceResponse,
+	results httpModels.SearchSliceResponse,
 	count int,
-) []models.Plant {
-	plants := make([]models.Plant, 0)
+) []httpModels.Plant {
+	plants := make([]httpModels.Plant, 0)
 	counter := 0
 
 	for _, result := range results.Data {
@@ -40,10 +40,10 @@ func InputSearchTrefleResultsToModels(
 }
 
 func InputSearchPerenaulResultsToModels(
-	results models.PerenualsPlantResponse,
+	results httpModels.PerenualsPlantResponse,
 	count int,
-) []models.Plant {
-	plants := make([]models.Plant, 0)
+) []httpModels.Plant {
+	plants := make([]httpModels.Plant, 0)
 	counter := 0
 
 	for _, result := range results.Data {
@@ -58,16 +58,16 @@ func InputSearchPerenaulResultsToModels(
 	return plants
 }
 
-func SearchTrefleItemToPlantModel(res models.ItemPlantResponse) models.Plant {
-	return models.Plant{
+func SearchTrefleItemToPlantModel(res httpModels.ItemPlantResponse) httpModels.Plant {
+	return httpModels.Plant{
 		ID:             uint64(res.ID),
 		ScientificName: []string{res.ScName},
 		ImageUrl:       res.ImageURL,
 	}
 }
 
-func SearchItemToPlantModel(res models.PerenualPlant) models.Plant {
-	return models.Plant{
+func SearchItemToPlantModel(res httpModels.PerenualPlant) httpModels.Plant {
+	return httpModels.Plant{
 		ID:             uint64(res.ID),
 		CommonName:     res.CommonName,
 		ImageUrl:       res.ImageURL.URL,

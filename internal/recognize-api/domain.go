@@ -6,15 +6,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
 type API interface {
 	Recognize(
 		ctx context.Context,
 		formdata *multipart.Form,
-		project models.Project,
-	) ([]models.Plant, error)
+		project httpModels.Project,
+	) ([]httpModels.Plant, error)
 }
 
 type Usecase interface {
@@ -22,7 +22,7 @@ type Usecase interface {
 		ctx context.Context,
 		formdata *multipart.Form,
 		project string,
-	) ([]models.XiaomiPlant, error)
+	) ([]httpModels.XiaomiPlant, error)
 }
 
 type Handler interface {

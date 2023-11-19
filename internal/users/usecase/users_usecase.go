@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 	"github.com/cyber_bed/internal/utils/crypto"
 )
 
@@ -19,10 +19,10 @@ func NewUsersUsecase(r domain.UsersRepository) domain.UsersUsecase {
 	}
 }
 
-func (u UsersUsecase) CreateUser(user models.User) (uint64, error) {
+func (u UsersUsecase) CreateUser(user httpModels.User) (uint64, error) {
 	if _, err := u.usersRepository.GetByUsername(user.Username); err == nil {
 		return 0, errors.Wrapf(
-			models.ErrUserExists,
+			httpModels.ErrUserExists,
 			"user already exists with username: %s",
 			user.Username,
 		)
@@ -42,19 +42,19 @@ func (u UsersUsecase) CreateUser(user models.User) (uint64, error) {
 	return id, nil
 }
 
-func (u UsersUsecase) GetBySessionID(sessionID string) (models.User, error) {
+func (u UsersUsecase) GetBySessionID(sessionID string) (httpModels.User, error) {
 	user, err := u.usersRepository.GetBySessionID(sessionID)
 	if err != nil {
 		if errors.Is(gorm.ErrRecordNotFound, err) {
-			return models.User{}, errors.Wrapf(
-				models.ErrNotFound,
+			return httpModels.User{}, errors.Wrapf(
+				httpModels.ErrNotFound,
 				"session with value: {%s} not found",
 				sessionID,
 			)
 		}
-		return models.User{}, err
+		return httpModels.User{}, err
 	}
-	return user, nil
+	return httpModels.UserGormToHttp(user), nil
 }
 
 func (u UsersUsecase) GetUserIDBySessionID(sessionID string) (uint64, error) {
@@ -62,7 +62,7 @@ func (u UsersUsecase) GetUserIDBySessionID(sessionID string) (uint64, error) {
 	if err != nil {
 		if errors.Is(gorm.ErrRecordNotFound, err) {
 			return 0, errors.Wrapf(
-				models.ErrNotFound,
+				httpModels.ErrNotFound,
 				"session with value: {%s} not found",
 				sessionID,
 			)
@@ -72,32 +72,32 @@ func (u UsersUsecase) GetUserIDBySessionID(sessionID string) (uint64, error) {
 	return usrID, nil
 }
 
-func (u UsersUsecase) GetByUsername(username string) (models.User, error) {
+func (u UsersUsecase) GetByUsername(username string) (httpModels.User, error) {
 	user, err := u.usersRepository.GetByUsername(username)
 	if err != nil {
 		if errors.Is(gorm.ErrRecordNotFound, err) {
-			return models.User{}, errors.Wrapf(
-				models.ErrNotFound,
+			return httpModels.User{}, errors.Wrapf(
+				httpModels.ErrNotFound,
 				"username with value: {%s} not found",
 				username,
 			)
 		}
-		return models.User{}, err
+		return httpModels.User{}, err
 	}
-	return user, nil
+	return httpModels.UserGormToHttp(user), nil
 }
 
-func (u UsersUsecase) GetByID(userID uint64) (models.User, error) {
+func (u UsersUsecase) GetByID(userID uint64) (httpModels.User, error) {
 	user, err := u.usersRepository.GetByID(userID)
 	if err != nil {
 		if errors.Is(gorm.ErrRecordNotFound, err) {
-			return models.User{}, errors.Wrapf(
-				models.ErrNotFound,
+			return httpModels.User{}, errors.Wrapf(
+				httpModels.ErrNotFound,
 				"username with id: {%d} not found",
 				userID,
 			)
 		}
-		return models.User{}, err
+		return httpModels.User{}, err
 	}
-	return user, nil
+	return httpModels.UserGormToHttp(user), nil
 }

@@ -11,7 +11,7 @@ import (
 
 	"github.com/cyber_bed/internal/api/convert"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
 type TrefleAPI struct {
@@ -35,7 +35,7 @@ func NewTrefleAPI(baseURL *url.URL, countResults int, token string) domain.Plant
 func (t *TrefleAPI) SearchByName(
 	ctx context.Context,
 	name string,
-) ([]models.Plant, error) {
+) ([]httpModels.Plant, error) {
 	u := t.baseURL
 	q := u.Query()
 	q.Set("q", name)
@@ -43,7 +43,7 @@ func (t *TrefleAPI) SearchByName(
 	u.RawQuery = q.Encode()
 	apiURL := u.JoinPath("search")
 
-	var resp models.SearchSliceResponse
+	var resp httpModels.SearchSliceResponse
 
 	if err := requests.
 		URL(apiURL.String()).
@@ -56,31 +56,31 @@ func (t *TrefleAPI) SearchByName(
 	return convert.InputSearchTrefleResultsToModels(resp, t.countResults), nil
 }
 
-func (t *TrefleAPI) SearchByID(ctx context.Context, id uint64) (models.Plant, error) {
+func (t *TrefleAPI) SearchByID(ctx context.Context, id uint64) (httpModels.Plant, error) {
 	u := t.baseURL
 	q := u.Query()
 	u.RawQuery = q.Encode()
 	apiURL := u.JoinPath(strconv.FormatUint(id, 10)).String()
 
-	var resp models.SearchResponse
+	var resp httpModels.SearchResponse
 	if err := requests.
 		URL(apiURL).
 		Method(http.MethodGet).
 		ToJSON(&resp).
 		Fetch(ctx); err != nil {
-		return models.Plant{}, errors.Wrap(err, "failed to search plant by id")
+		return httpModels.Plant{}, errors.Wrap(err, "failed to search plant by id")
 	}
 	return convert.SearchTrefleItemToPlantModel(resp.Data), nil
 }
 
-func (t *TrefleAPI) GetPage(ctx context.Context, pageNum uint64) ([]models.Plant, error) {
+func (t *TrefleAPI) GetPage(ctx context.Context, pageNum uint64) ([]httpModels.Plant, error) {
 	u := t.baseURL
 	q := u.Query()
 	q.Set("page", strconv.FormatUint(pageNum, 10))
 
 	u.RawQuery = q.Encode()
 
-	var resp models.SearchSliceResponse
+	var resp httpModels.SearchSliceResponse
 	if err := requests.
 		URL(u.String()).
 		Method(http.MethodGet).

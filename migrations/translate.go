@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/cyber_bed/internal/models"
+	gormModels "github.com/cyber_bed/internal/models/gorm"
 	"github.com/cyber_bed/internal/utils/translator"
 )
 
@@ -24,7 +24,7 @@ func EditField() error {
 		if err != nil {
 			return err
 		}
-		var plantItem models.XiaomiPlant
+		var plantItem gormModels.XiaomiPlant
 		json.Unmarshal(content, &plantItem)
 
 		plantItem.Basic.FloralLanguage, err = translator.Translate(plantItem.Basic.FloralLanguage)
@@ -66,7 +66,7 @@ func TranslatePlants(pathToDir string) error {
 			return err
 		}
 
-		var plantItem models.XiaomiPlant
+		var plantItem gormModels.XiaomiPlant
 		json.Unmarshal(content, &plantItem)
 
 		plantItem.DisplayPid, err = translator.Translate(plantItem.DisplayPid)
