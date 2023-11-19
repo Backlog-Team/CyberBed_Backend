@@ -43,10 +43,9 @@ func (pf *PlantFolderRelation) AfterCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-// FIXME: this hook doesn't work right way
 func (pf *PlantFolderRelation) AfterSave(tx *gorm.DB) (err error) {
 	tx.Model(&Folder{}).
 		Where("id = ?", pf.FolderID).
-		UpdateColumn("plants_num", uint64(len(pf.PlantsID)))
+		UpdateColumn("plants_num", gorm.Expr("?", uint64(len(pf.PlantsID))))
 	return
 }

@@ -108,7 +108,7 @@ func (db *Postgres) AddPlantToFolder(folderID, plantID uint64) error {
 	}
 
 	folderPlant.PlantsID = append(folderPlant.PlantsID, int64(plantID))
-	if err := db.DB.Model(&models.PlantFolderRelation{}).
+	if err := db.DB.Model(&models.PlantFolderRelation{FolderID: folderID}).
 		Where("folder_id = ?", folderID).
 		Update("plants_id", &folderPlant.PlantsID).
 		Error; err != nil {
@@ -136,7 +136,7 @@ func (db *Postgres) UpdateFolderPlant(folderID, plantID uint64) error {
 		}
 	}
 
-	if err := db.DB.Model(&models.PlantFolderRelation{}).
+	if err := db.DB.Model(&models.PlantFolderRelation{FolderID: folderID}).
 		Where("folder_id = ?", folderID).
 		Update("plants_id", &folderPlant.PlantsID).
 		Error; err != nil {
