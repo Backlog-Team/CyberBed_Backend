@@ -27,3 +27,13 @@ type PlantsRepository interface {
 	GetByPlantName(plantName string) ([]models.XiaomiPlant, error)
 	GetPlantsPage(pageNum uint64) ([]models.XiaomiPlant, error)
 }
+
+type FoldersRepository interface {
+	CreateFolder(folder models.Folder) (uint64, error)
+	GetFolders(userID uint64) ([]models.Folder, error)
+	GetFolder(id uint64) (models.Folder, error)
+	DeleteFolder(id uint64) error
+	GetPlantsID(folderID uint64) ([]uint64, error)
+	AddPlantToFolder(folderID, plantID uint64) error
+	UpdateFolderPlant(folderID, plantID uint64) error
+}
