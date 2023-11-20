@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 	domainRecognition "github.com/cyber_bed/internal/recognize-api"
 )
 
@@ -33,13 +33,13 @@ func (u usecase) Recognize(
 	ctx context.Context,
 	formdata *multipart.Form,
 	project string,
-) ([]models.XiaomiPlant, error) {
-	recognized, err := u.apiRecognition.Recognize(ctx, formdata, models.Project(project))
+) ([]httpModels.XiaomiPlant, error) {
+	recognized, err := u.apiRecognition.Recognize(ctx, formdata, httpModels.Project(project))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to recognize images")
 	}
 
-	plants := make([]models.XiaomiPlant, 0)
+	plants := make([]httpModels.XiaomiPlant, 0)
 	for _, plant := range recognized {
 		found, err := u.plantsUsecase.GetPlantByName(plant.CommonName)
 		if err != nil {

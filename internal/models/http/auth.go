@@ -1,4 +1,4 @@
-package models
+package httpModels
 
 var DeleteExpire = map[string]int{
 	"year":  0,

@@ -7,7 +7,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/cyber_bed/internal/models"
+	gormModels "github.com/cyber_bed/internal/models/gorm"
+	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
 type Postgres struct {
@@ -21,11 +22,13 @@ func NewPostgres(url string) (*Postgres, error) {
 	}
 
 	db.AutoMigrate(
-		&models.XiaomiPlant{},
-		&models.XiaomiPlantBasic{},
-		&models.XiaomiPlantMaintenance{},
-		&models.XiaomiPlantPrameter{},
-		&models.UserPlants{},
+		&gormModels.XiaomiPlant{},
+		&gormModels.XiaomiPlantBasic{},
+		&gormModels.XiaomiPlantMaintenance{},
+		&gormModels.XiaomiPlantPrameter{},
+		&gormModels.UserPlants{},
+
+		&gormModels.CustomPlant{},
 	)
 
 	return &Postgres{
@@ -34,7 +37,7 @@ func NewPostgres(url string) (*Postgres, error) {
 }
 
 func (db *Postgres) CreateUserPlantsRelations(userID uint64, plantsID []int64) error {
-	res := db.DB.Create(&models.UserPlants{
+	res := db.DB.Create(&gormModels.UserPlants{
 		UserID:   userID,
 		PlantsID: pq.Int64Array(plantsID),
 	})
@@ -45,11 +48,11 @@ func (db *Postgres) CreateUserPlantsRelations(userID uint64, plantsID []int64) e
 }
 
 func (db *Postgres) AddUserPlantsRelations(userID uint64, plantsID []int64) error {
-	userPlant := []models.UserPlants{}
-	db.DB.Table(models.PlantsTable).Select("*").Where("user_id = ?", userID).Scan(&userPlant)
+	userPlant := []gormModels.UserPlants{}
+	db.DB.Table(gormModels.PlantsTable).Select("*").Where("user_id = ?", userID).Scan(&userPlant)
 
 	if len(userPlant) == 0 {
-		res := db.DB.Table(models.PlantsTable).Create(&models.UserPlants{
+		res := db.DB.Table(gormModels.PlantsTable).Create(&gormModels.UserPlants{
 			UserID:   userID,
 			PlantsID: pq.Int64Array(plantsID),
 		})
@@ -60,7 +63,7 @@ func (db *Postgres) AddUserPlantsRelations(userID uint64, plantsID []int64) erro
 		newPlantIDs := userPlant[0].PlantsID
 		newPlantIDs = append(newPlantIDs, plantsID...)
 
-		res := db.DB.Table(models.PlantsTable).Where("user_id = ?", userID).Update("plants_id", &newPlantIDs)
+		res := db.DB.Table(gormModels.PlantsTable).Where("user_id = ?", userID).Update("plants_id", &newPlantIDs)
 		if res.Error != nil {
 			return res.Error
 		}
@@ -69,21 +72,21 @@ func (db *Postgres) AddUserPlantsRelations(userID uint64, plantsID []int64) erro
 	return nil
 }
 
-func (db *Postgres) GetPlantsByUserID(userID uint64) (models.UserPlants, error) {
-	var pl models.UserPlants
-	if err := db.DB.Table(models.PlantsTable).
+func (db *Postgres) GetPlantsByUserID(userID uint64) (gormModels.UserPlants, error) {
+	var pl gormModels.UserPlants
+	if err := db.DB.Table(gormModels.PlantsTable).
 		Select("*").
 		Where("user_id = ?", userID).
 		Scan(&pl).
 		Error; err != nil {
-		return models.UserPlants{}, err
+		return gormModels.UserPlants{}, err
 	}
 
 	return pl, nil
 }
 
-func (db *Postgres) UpdateUserPlantsRelation(relation models.UserPlants) error {
-	if err := db.DB.Table(models.PlantsTable).
+func (db *Postgres) UpdateUserPlantsRelation(relation gormModels.UserPlants) error {
+	if err := db.DB.Table(gormModels.PlantsTable).
 		Where("user_id = ?", relation.UserID).
 		Update("plants_id", &relation.PlantsID).Error; err != nil {
 		return err
@@ -91,24 +94,24 @@ func (db *Postgres) UpdateUserPlantsRelation(relation models.UserPlants) error {
 	return nil
 }
 
-func (db *Postgres) GetPlantByID(plantID uint64) (models.XiaomiPlant, error) {
-	var plant models.XiaomiPlant
+func (db *Postgres) GetPlantByID(plantID uint64) (gormModels.XiaomiPlant, error) {
+	var plant gormModels.XiaomiPlant
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
 		Preload("Parameter").
 		Where("xiaomi_plants.id = ?", plantID).
 		First(&plant).Error; err != nil {
-		return models.XiaomiPlant{}, err
+		return gormModels.XiaomiPlant{}, err
 	}
 	return plant, nil
 }
 
-func (db *Postgres) GetByPlantName(plantName string) ([]models.XiaomiPlant, error) {
-	var plants []models.XiaomiPlant
+func (db *Postgres) GetByPlantName(plantName string) ([]gormModels.XiaomiPlant, error) {
+	var plants []gormModels.XiaomiPlant
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
 		Preload("Parameter").
-		Where("plant_id LIKE ? OR display_pid LIKE ?", "%"+strings.ToLower(plantName)+"%", "%"+strings.ToLower(plantName)+"%").
+		Where("plant_id LIKE ? OR display_pid LIKE ?", "%"+strings.ToLower(plantName)+"%", "%"+plantName+"%").
 		Limit(10).
 		Find(&plants).Error; err != nil {
 		return nil, err
@@ -116,10 +119,10 @@ func (db *Postgres) GetByPlantName(plantName string) ([]models.XiaomiPlant, erro
 	return plants, nil
 }
 
-func (db *Postgres) GetPlantsPage(pageNum uint64) ([]models.XiaomiPlant, error) {
+func (db *Postgres) GetPlantsPage(pageNum uint64) ([]gormModels.XiaomiPlant, error) {
 	pageSize := 10
 	offset := (pageSize - 1) * int(pageNum-1)
-	var plants []models.XiaomiPlant
+	var plants []gormModels.XiaomiPlant
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
 		Preload("Parameter").
@@ -131,4 +134,59 @@ func (db *Postgres) GetPlantsPage(pageNum uint64) ([]models.XiaomiPlant, error) 
 		return nil, err
 	}
 	return plants, nil
+}
+
+func (db *Postgres) CreateCustomPlant(plant httpModels.CustomPlant) (uint64, error) {
+	var plantRow gormModels.CustomPlant
+	if err := db.DB.Create(&gormModels.CustomPlant{
+		PlantName: plant.PlantName,
+		About:     plant.About,
+		UserID:    plant.UserID,
+		Image:     plant.Image,
+	}).Scan(&plantRow).Error; err != nil {
+		return 0, err
+	}
+	return plantRow.ID, nil
+}
+
+func (db *Postgres) UpdateCustomPlant(plant httpModels.CustomPlant) error {
+	if err := db.DB.Model(&gormModels.CustomPlant{}).
+		Where("id = ?", plant.ID).
+		Update("plant_name", plant.PlantName).
+		Update("about", plant.About).
+		Update("image", plant.Image).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *Postgres) GetCustomPlants(userID uint64) ([]gormModels.CustomPlant, error) {
+	var resRows []gormModels.CustomPlant
+	if err := db.DB.Model(&gormModels.CustomPlant{}).
+		Where("user_id = ?", userID).
+		Find(&resRows).Error; err != nil {
+		return nil, err
+	}
+	return resRows, nil
+}
+
+func (db *Postgres) GetCustomPlant(userID, plantID uint64) (gormModels.CustomPlant, error) {
+	var resRow gormModels.CustomPlant
+	if err := db.DB.Model(&gormModels.CustomPlant{}).
+		Where("user_id = ? AND id = ?", userID, plantID).
+		First(&resRow).Error; err != nil {
+		return gormModels.CustomPlant{}, err
+	}
+	return resRow, nil
+}
+
+func (db *Postgres) DeleteCustomPlant(userID, plantID uint64) error {
+	if err := db.DB.Select("CustomPlant").
+		Delete(&gormModels.CustomPlant{
+			ID:     plantID,
+			UserID: userID,
+		}).Error; err != nil {
+		return err
+	}
+	return nil
 }

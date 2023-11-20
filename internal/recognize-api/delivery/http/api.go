@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 	domain "github.com/cyber_bed/internal/recognize-api"
 )
 
@@ -29,7 +29,7 @@ func (r *RecognitionHandler) Recognize(c echo.Context) error {
 	recognize, err := r.usecase.Recognize(
 		c.Request().Context(),
 		formdata,
-		string(models.AllProject),
+		string(httpModels.AllProject),
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to recognize plant")

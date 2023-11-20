@@ -8,7 +8,7 @@ import (
 
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
 type FoldersHandler struct {
@@ -35,7 +35,7 @@ func (h FoldersHandler) CreateFolder(c echo.Context) error {
 	}
 
 	folderName := c.QueryParam("name")
-	id, err := h.foldersUsecase.CreateFolder(models.Folder{
+	id, err := h.foldersUsecase.CreateFolder(httpModels.Folder{
 		UserID:     userID,
 		FolderName: folderName,
 	})
@@ -43,7 +43,7 @@ func (h FoldersHandler) CreateFolder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, models.UserID{ID: id})
+	return c.JSON(http.StatusOK, httpModels.UserID{ID: id})
 }
 
 func (h FoldersHandler) GetFolders(c echo.Context) error {
@@ -74,7 +74,7 @@ func (h FoldersHandler) DeleteFolder(c echo.Context) error {
 	if err := h.foldersUsecase.DeleteFolderByID(folderID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, models.EmptyModel{})
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
 
 func (h FoldersHandler) GetPlantsFromFolder(c echo.Context) error {
@@ -103,7 +103,7 @@ func (h FoldersHandler) AddPlantToFolder(c echo.Context) error {
 	if err := h.foldersUsecase.AddPlantToFolder(folderID, plantID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, models.EmptyModel{})
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
 
 func (h FoldersHandler) DeletePlantFromFolder(c echo.Context) error {
@@ -119,5 +119,5 @@ func (h FoldersHandler) DeletePlantFromFolder(c echo.Context) error {
 	if err := h.foldersUsecase.DeletePlantFromFolder(folderID, plantID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, models.EmptyModel{})
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }

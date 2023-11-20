@@ -1,4 +1,4 @@
-package models
+package gormModels
 
 import (
 	"time"
@@ -12,17 +12,6 @@ type UserPlants struct {
 	PlantsID pq.Int64Array `gorm:"type:integer[]"`
 }
 
-type UserPlantsInf struct {
-	PlantID      uint64
-	UserID       uint64
-	LastWatering time.Time
-}
-
-// Needs to add custom informantion of users addition
-type CustomPlant struct {
-	ID uint64
-}
-
 type Plant struct {
 	UserID   uint64 `json:"userID"`
 	ID       uint64 `json:"id"`
@@ -33,6 +22,16 @@ type Plant struct {
 	OtherName      []string `json:"other_name"`
 	Cycle          string   `json:"cycle"`
 	Watering       string   `json:"watering"`
+}
+
+type CustomPlant struct {
+	gorm.Model
+	ID        uint64
+	UserID    uint64
+	PlantName string
+	About     string
+	Image     string
+	Notify    time.Time
 }
 
 type XiaomiPlant struct {

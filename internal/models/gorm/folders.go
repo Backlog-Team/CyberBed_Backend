@@ -1,4 +1,4 @@
-package models
+package gormModels
 
 import (
 	"github.com/lib/pq"
@@ -18,22 +18,6 @@ type PlantFolderRelation struct {
 	gorm.Model
 	FolderID uint64        `gorm:"index;unique"`
 	PlantsID pq.Int64Array `gorm:"type:integer[]"`
-}
-
-type FolderHttp struct {
-	ID         uint64 `json:"ID"`
-	UserID     uint64 `json:"userID"`
-	FolderName string `json:"folderName"`
-	PlantsNum  uint64 `json:"plantsNum"`
-}
-
-func FolderGormToHttp(f Folder) FolderHttp {
-	return FolderHttp{
-		ID:         f.ID,
-		UserID:     f.UserID,
-		FolderName: f.FolderName,
-		PlantsNum:  f.PlantsNum,
-	}
 }
 
 func (pf *PlantFolderRelation) AfterCreate(tx *gorm.DB) (err error) {

@@ -1,4 +1,4 @@
-package models
+package httpModels
 
 type SearchSliceResponse struct {
 	Data []ItemPlantResponse `json:"data"`

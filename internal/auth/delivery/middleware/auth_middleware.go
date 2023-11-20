@@ -3,9 +3,10 @@ package authMiddlewares
 import (
 	"net/http"
 
+	"github.com/labstack/echo/v4"
+
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/labstack/echo/v4"
 )
 
 type Middlewares struct {

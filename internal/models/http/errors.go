@@ -1,4 +1,4 @@
-package models
+package httpModels
 
 import "github.com/pkg/errors"
 

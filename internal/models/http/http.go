@@ -1,3 +1,3 @@
-package models
+package httpModels
 
 type EmptyModel []interface{}

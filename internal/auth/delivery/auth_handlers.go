@@ -8,7 +8,7 @@ import (
 
 	"github.com/cyber_bed/internal/config"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
 type AuthHandler struct {
@@ -45,13 +45,13 @@ func (h AuthHandler) Auth(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
 
-	return c.JSON(http.StatusOK, models.UserID{
+	return c.JSON(http.StatusOK, httpModels.UserID{
 		ID: userID,
 	})
 }
 
 func (h AuthHandler) SignUp(c echo.Context) error {
-	var recievedUser models.User
+	var recievedUser httpModels.User
 	if err := c.Bind(&recievedUser); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
@@ -68,13 +68,13 @@ func (h AuthHandler) SignUp(c echo.Context) error {
 
 	c.SetCookie(h.makeHTTPCookie(session))
 
-	return c.JSON(http.StatusOK, models.UserID{
+	return c.JSON(http.StatusOK, httpModels.UserID{
 		ID: userID,
 	})
 }
 
 func (h AuthHandler) Login(c echo.Context) error {
-	var authUsr models.AuthUser
+	var authUsr httpModels.AuthUser
 	if err := c.Bind(&authUsr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
@@ -86,7 +86,7 @@ func (h AuthHandler) Login(c echo.Context) error {
 
 	c.SetCookie(h.makeHTTPCookie(session))
 
-	return c.JSON(http.StatusOK, models.UserID{
+	return c.JSON(http.StatusOK, httpModels.UserID{
 		ID: usrID,
 	})
 }
@@ -102,9 +102,9 @@ func (h AuthHandler) Logout(c echo.Context) error {
 	}
 
 	cookie.Expires = time.Now().AddDate(
-		models.DeleteExpire["year"],
-		models.DeleteExpire["month"],
-		models.DeleteExpire["day"],
+		httpModels.DeleteExpire["year"],
+		httpModels.DeleteExpire["month"],
+		httpModels.DeleteExpire["day"],
 	)
 	c.SetCookie(h.makeHTTPCookie(cookie.Value))
 

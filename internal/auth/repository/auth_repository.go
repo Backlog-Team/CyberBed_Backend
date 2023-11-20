@@ -4,7 +4,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/cyber_bed/internal/models"
+	gormModels "github.com/cyber_bed/internal/models/gorm"
 )
 
 type Postgres struct {
@@ -17,15 +17,15 @@ func NewPostgres(url string) (*Postgres, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(models.Cookie{})
+	db.AutoMigrate(gormModels.Cookie{})
 
 	return &Postgres{
 		DB: db,
 	}, nil
 }
 
-func (db *Postgres) CreateSession(cookie models.Cookie) (string, error) {
-	res := db.DB.Table(models.SessionTable).Create(&cookie)
+func (db *Postgres) CreateSession(cookie gormModels.Cookie) (string, error) {
+	res := db.DB.Table(gormModels.SessionTable).Create(&cookie)
 	if res.Error != nil {
 		return "", res.Error
 	}
@@ -33,7 +33,7 @@ func (db *Postgres) CreateSession(cookie models.Cookie) (string, error) {
 }
 
 func (db *Postgres) DeleteBySessionID(sessionID string) error {
-	if err := db.DB.Delete(&models.Cookie{}, "value = ?", sessionID).
+	if err := db.DB.Delete(&gormModels.Cookie{}, "value = ?", sessionID).
 		Error; err != nil {
 		return err
 	}

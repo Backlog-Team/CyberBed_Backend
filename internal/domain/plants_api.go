@@ -3,11 +3,11 @@ package domain
 import (
 	"context"
 
-	"github.com/cyber_bed/internal/models"
+	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
 type PlantsAPI interface {
-	SearchByName(ctx context.Context, name string) ([]models.Plant, error)
-	SearchByID(ctx context.Context, id uint64) (models.Plant, error)
-	GetPage(ctx context.Context, pageNum uint64) ([]models.Plant, error)
+	SearchByName(ctx context.Context, name string) ([]httpModels.Plant, error)
+	SearchByID(ctx context.Context, id uint64) (httpModels.Plant, error)
+	GetPage(ctx context.Context, pageNum uint64) ([]httpModels.Plant, error)
 }

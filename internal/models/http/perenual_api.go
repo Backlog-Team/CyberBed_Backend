@@ -1,4 +1,4 @@
-package models
+package httpModels
 
 type PerenualsPlantResponse struct {
 	Data []PerenualPlant
@@ -53,7 +53,6 @@ type PerenualPlant struct {
 	Cycle          string   `json:"cycle"`
 	Watering       string   `json:"watering"`
 	Sunlight       []string `json:"sunlight"`
-	Premium        string   `json:"sunlight"`
 	ImageURL       ImageURL `json:"default_image"`
 }
 

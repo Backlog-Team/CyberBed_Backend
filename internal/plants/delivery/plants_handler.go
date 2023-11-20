@@ -1,6 +1,8 @@
 package httpPlants
 
 import (
+	"io"
+	"mime"
 	"net/http"
 	"os"
 	"strconv"
@@ -9,8 +11,9 @@ import (
 
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
-	"github.com/cyber_bed/internal/models"
-	"github.com/cyber_bed/internal/utils/decoding"
+	httpModels "github.com/cyber_bed/internal/models/http"
+	coder "github.com/cyber_bed/internal/utils/decoding"
+	fileUtils "github.com/cyber_bed/internal/utils/files"
 )
 
 type PlantsHandler struct {
@@ -40,7 +43,7 @@ func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.JSON(http.StatusOK, plant)
+	return c.JSON(http.StatusOK, httpModels.XiaomiPlantGormToHttp(plant))
 }
 
 func (h PlantsHandler) GetPlantImage(c echo.Context) error {
@@ -54,7 +57,7 @@ func (h PlantsHandler) GetPlantImage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	fileName, err := decoding.DecodeBase64(plant.Image)
+	fileName, err := coder.DecodeBase64(plant.Image)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
@@ -104,7 +107,7 @@ func (h PlantsHandler) CreatePlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	var recievedPlant models.Plant
+	var recievedPlant httpModels.Plant
 	if err := c.Bind(&recievedPlant); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
@@ -115,7 +118,7 @@ func (h PlantsHandler) CreatePlant(c echo.Context) error {
 	if err := h.plantsUsecase.AddPlant(recievedPlant); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, models.EmptyModel{})
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
 
 func (h PlantsHandler) GetPlant(c echo.Context) error {
@@ -144,7 +147,7 @@ func (h PlantsHandler) GetPlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.JSON(http.StatusOK, xiaomiPlant)
+	return c.JSON(http.StatusOK, httpModels.XiaomiPlantGormToHttp(xiaomiPlant))
 }
 
 func (h PlantsHandler) GetPlants(c echo.Context) error {
@@ -186,5 +189,221 @@ func (h PlantsHandler) DeletePlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, models.EmptyModel{})
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
+}
+
+func (h PlantsHandler) CreateCustomPlant(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	customPlant := httpModels.CustomPlant{
+		UserID:    userID,
+		PlantName: c.FormValue("plantName"),
+		About:     c.FormValue("about"),
+	}
+
+	formdata, err := c.MultipartForm()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	image, isImageProvided := formdata.File["image"]
+	var extension string
+	if isImageProvided {
+		content, err := image[0].Open()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+		defer content.Close()
+
+		mimeType, err := fileUtils.GetMimeType(image[0])
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+		extensions, err := mime.ExtensionsByType(mimeType)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+		if len(extensions) > 0 {
+			extension = extensions[0]
+		}
+
+		data, err := io.ReadAll(content)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+		customPlant.Image = string(data)
+	}
+
+	customPlantID, err := h.plantsUsecase.CreateCustomPlant(customPlant, extension)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.UserID{ID: customPlantID})
+}
+
+func (h PlantsHandler) UpdateCustomPlant(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	customPlant := httpModels.CustomPlant{
+		ID:        plantID,
+		UserID:    userID,
+		PlantName: c.FormValue("plantName"),
+		About:     c.FormValue("about"),
+	}
+
+	formdata, err := c.MultipartForm()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	image, isImageProvided := formdata.File["image"]
+	var extension string
+	if isImageProvided {
+		content, err := image[0].Open()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+		defer content.Close()
+
+		mimeType, err := fileUtils.GetMimeType(image[0])
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+		extensions, err := mime.ExtensionsByType(mimeType)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+		if len(extensions) > 0 {
+			extension = extensions[0]
+		}
+
+		data, err := io.ReadAll(content)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+		customPlant.Image = string(data)
+	}
+
+	if err := h.plantsUsecase.UpdateCustomPlant(customPlant, extension); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
+}
+
+func (h PlantsHandler) GetCustomPlants(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	customPlants, err := h.plantsUsecase.GetCustomPlants(userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, customPlants)
+}
+
+func (h PlantsHandler) GetCustomPlant(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	customPlant, err := h.plantsUsecase.GetCustomPlant(userID, plantID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, customPlant)
+}
+
+func (h PlantsHandler) GetCustomPlantImage(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	image, err := h.plantsUsecase.GetCustomPlantImage(userID, plantID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+
+	fileName, err := coder.DecodeBase64(image)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	defer os.Remove(fileName)
+
+	image = ""
+	return c.Attachment(fileName, image)
+}
+
+func (h PlantsHandler) DeleteCustomPlant(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	if err := h.plantsUsecase.DeleteCustomPlant(userID, plantID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
