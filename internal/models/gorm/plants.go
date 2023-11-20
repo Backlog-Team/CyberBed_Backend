@@ -1,6 +1,8 @@
 package gormModels
 
 import (
+	"time"
+
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -20,6 +22,16 @@ type Plant struct {
 	OtherName      []string `json:"other_name"`
 	Cycle          string   `json:"cycle"`
 	Watering       string   `json:"watering"`
+}
+
+type CustomPlant struct {
+	gorm.Model
+	ID        uint64
+	UserID    uint64
+	PlantName string
+	About     string
+	Image     string
+	Notify    time.Time
 }
 
 type XiaomiPlant struct {

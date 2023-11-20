@@ -180,6 +180,14 @@ func (s *Server) MakeRouter() {
 	folders.DELETE("/:folderID", s.foldersHandler.DeleteFolder)
 	folders.POST("/:folderID/plants/:plantID", s.foldersHandler.AddPlantToFolder)
 	folders.DELETE("/:folderID/plants/:plantID", s.foldersHandler.DeletePlantFromFolder)
+
+	customPlants := v1.Group("/custom", s.authMiddleware.LoginRequired)
+	customPlants.POST("/plants", s.plantsHandler.CreateCustomPlant)
+	customPlants.PUT("/plants/:plantID", s.plantsHandler.UpdateCustomPlant)
+	customPlants.GET("/plants", s.plantsHandler.GetCustomPlants)
+	customPlants.GET("/plants/:plantID", s.plantsHandler.GetCustomPlant)
+	customPlants.GET("/plants/:plantID/image", s.plantsHandler.GetCustomPlantImage)
+	customPlants.DELETE("/plants/:plantID", s.plantsHandler.DeleteCustomPlant)
 }
 
 func (s *Server) makeMiddlewares() {

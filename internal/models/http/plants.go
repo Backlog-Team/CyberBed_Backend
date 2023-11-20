@@ -1,6 +1,8 @@
 package httpModels
 
-import gormModels "github.com/cyber_bed/internal/models/gorm"
+import (
+	gormModels "github.com/cyber_bed/internal/models/gorm"
+)
 
 type Plant struct {
 	UserID   uint64 `json:"userID"`
@@ -12,6 +14,15 @@ type Plant struct {
 	OtherName      []string `json:"other_name"`
 	Cycle          string   `json:"cycle"`
 	Watering       string   `json:"watering"`
+}
+
+type CustomPlant struct {
+	ID           uint64 `json:"id"`
+	UserID       uint64 `json:"userID"`
+	PlantName    string `json:"plantName"`
+	About        string `json:"about"`
+	Image        string `json:"image"`
+	NotifyString string `json:"notify"`
 }
 
 type XiaomiPlant struct {
@@ -112,5 +123,14 @@ func XiaomiPlantGormToHttp(plant gormModels.XiaomiPlant) XiaomiPlant {
 			MaxSoilEc:    plant.Parameter.MaxSoilEc,
 			MinSoilEc:    plant.Parameter.MinSoilEc,
 		},
+	}
+}
+
+func CustomPlantGormToHttp(plant gormModels.CustomPlant) CustomPlant {
+	return CustomPlant{
+		ID:        plant.ID,
+		UserID:    plant.UserID,
+		PlantName: plant.PlantName,
+		About:     plant.About,
 	}
 }

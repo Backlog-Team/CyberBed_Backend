@@ -8,6 +8,7 @@ import (
 	"github.com/cyber_bed/internal/domain"
 	gormModels "github.com/cyber_bed/internal/models/gorm"
 	httpModels "github.com/cyber_bed/internal/models/http"
+	coder "github.com/cyber_bed/internal/utils/decoding"
 )
 
 type PlantsUsecase struct {
@@ -159,4 +160,91 @@ func (u PlantsUsecase) DeletePlant(userID, plantID uint64) error {
 		return err
 	}
 	return nil
+}
+
+func (u PlantsUsecase) CreateCustomPlant(
+	plant httpModels.CustomPlant,
+	extension string,
+) (uint64, error) {
+	updatedPlant := plant
+	if len(plant.Image) > 0 {
+		encodedImage, err := coder.EncodeToBase64(plant.Image, extension)
+		if err != nil {
+			return 0, errors.Wrap(
+				httpModels.ErrNoImages,
+				"cannot create plant due to corrupted image",
+			)
+		}
+		updatedPlant.Image = encodedImage
+	}
+
+	cPlantID, err := u.plantsRepository.CreateCustomPlant(updatedPlant)
+	if err != nil {
+		return 0, err
+	}
+	return cPlantID, nil
+}
+
+func (u PlantsUsecase) UpdateCustomPlant(plant httpModels.CustomPlant, extension string) error {
+	updatedPlant := plant
+	if len(plant.Image) > 0 {
+		encodedImage, err := coder.EncodeToBase64(plant.Image, extension)
+		if err != nil {
+			return errors.Wrap(httpModels.ErrNoImages, "cannot create plant due to corrupted image")
+		}
+		updatedPlant.Image = encodedImage
+	}
+	return u.plantsRepository.UpdateCustomPlant(updatedPlant)
+}
+
+func (u PlantsUsecase) GetCustomPlants(userID uint64) ([]httpModels.CustomPlant, error) {
+	cPlants := make([]httpModels.CustomPlant, 0)
+	cGormPlants, err := u.plantsRepository.GetCustomPlants(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return cPlants, nil
+		}
+		return nil, err
+	}
+
+	for _, pl := range cGormPlants {
+		cPlants = append(cPlants, httpModels.CustomPlantGormToHttp(pl))
+	}
+	return cPlants, nil
+}
+
+func (u PlantsUsecase) GetCustomPlant(userID, plantID uint64) (httpModels.CustomPlant, error) {
+	cGormPlant, err := u.plantsRepository.GetCustomPlant(userID, plantID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return httpModels.CustomPlant{}, errors.Wrapf(
+				httpModels.ErrNotFound,
+				"custom plant with user_id {%d} and plant_id {%d} not found",
+				userID,
+				plantID,
+			)
+		}
+		return httpModels.CustomPlant{}, err
+	}
+	return httpModels.CustomPlantGormToHttp(cGormPlant), nil
+}
+
+func (u PlantsUsecase) GetCustomPlantImage(userID, plantID uint64) (string, error) {
+	cGormPlant, err := u.plantsRepository.GetCustomPlant(userID, plantID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", errors.Wrapf(
+				httpModels.ErrNotFound,
+				"custom plant with user_id {%d} and plant_id {%d} not found",
+				userID,
+				plantID,
+			)
+		}
+		return "", err
+	}
+	return cGormPlant.Image, nil
+}
+
+func (u PlantsUsecase) DeleteCustomPlant(userID, plantID uint64) error {
+	return u.plantsRepository.DeleteCustomPlant(userID, plantID)
 }

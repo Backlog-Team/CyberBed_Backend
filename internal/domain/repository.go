@@ -27,6 +27,12 @@ type PlantsRepository interface {
 	GetPlantByID(plantID uint64) (gormModels.XiaomiPlant, error)
 	GetByPlantName(plantName string) ([]gormModels.XiaomiPlant, error)
 	GetPlantsPage(pageNum uint64) ([]gormModels.XiaomiPlant, error)
+
+	CreateCustomPlant(plant httpModels.CustomPlant) (uint64, error)
+	UpdateCustomPlant(plant httpModels.CustomPlant) error
+	GetCustomPlants(userID uint64) ([]gormModels.CustomPlant, error)
+	GetCustomPlant(userID, plantID uint64) (gormModels.CustomPlant, error)
+	DeleteCustomPlant(userID, plantID uint64) error
 }
 
 type FoldersRepository interface {
