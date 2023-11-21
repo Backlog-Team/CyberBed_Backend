@@ -34,6 +34,12 @@ type CustomPlant struct {
 	Notify    time.Time
 }
 
+type SavedPlant struct {
+	gorm.Model
+	UserID  uint64
+	PlantID uint64
+}
+
 type XiaomiPlant struct {
 	gorm.Model
 	ID          uint64

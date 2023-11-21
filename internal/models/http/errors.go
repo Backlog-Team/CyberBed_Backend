@@ -9,4 +9,5 @@ var (
 	ErrNotFound          = errors.New("item not found")
 	ErrNoSession         = errors.New("session not found")
 	ErrIncorrectPassword = errors.New("password is incorrect")
+	ErrRecordExists      = errors.New("record already exists")
 )

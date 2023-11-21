@@ -25,6 +25,11 @@ type CustomPlant struct {
 	NotifyString string `json:"notify"`
 }
 
+type SavedPlant struct {
+	UserID  uint64
+	PlantID uint64
+}
+
 type XiaomiPlant struct {
 	ID      uint64
 	PlantID string `json:"pid"`
@@ -132,5 +137,12 @@ func CustomPlantGormToHttp(plant gormModels.CustomPlant) CustomPlant {
 		UserID:    plant.UserID,
 		PlantName: plant.PlantName,
 		About:     plant.About,
+	}
+}
+
+func SavedPlantGormToHttp(plant gormModels.SavedPlant) SavedPlant {
+	return SavedPlant{
+		UserID:  plant.UserID,
+		PlantID: plant.PlantID,
 	}
 }
