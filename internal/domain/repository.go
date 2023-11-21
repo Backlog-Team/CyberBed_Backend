@@ -33,6 +33,11 @@ type PlantsRepository interface {
 	GetCustomPlants(userID uint64) ([]gormModels.CustomPlant, error)
 	GetCustomPlant(userID, plantID uint64) (gormModels.CustomPlant, error)
 	DeleteCustomPlant(userID, plantID uint64) error
+
+	CreateSavedPlant(userID, plantID uint64) error
+	GetSavedPlants(userID uint64) ([]gormModels.SavedPlant, error)
+	DeleteSavedPlant(userID, plantID uint64) error
+	GetSavedPlantByIDs(userID, plantID uint64) (gormModels.SavedPlant, error)
 }
 
 type FoldersRepository interface {

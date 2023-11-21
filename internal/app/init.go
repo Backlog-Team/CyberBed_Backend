@@ -172,6 +172,9 @@ func (s *Server) MakeRouter() {
 	plants.POST("/:plantID", s.plantsHandler.CreatePlant)
 	plants.DELETE("/:plantID", s.plantsHandler.DeletePlant)
 	plants.GET("", s.plantsHandler.GetPlants)
+	plants.POST("/:plantID/saved", s.plantsHandler.CreateSavedPlant)
+	plants.GET("/saved", s.plantsHandler.GetSavedPlants)
+	plants.DELETE("/:plantID/saved", s.plantsHandler.DeleteSavedPlant)
 
 	folders := v1.Group("/folders", s.authMiddleware.LoginRequired)
 	folders.POST("", s.foldersHandler.CreateFolder)

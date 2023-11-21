@@ -29,6 +29,7 @@ func NewPostgres(url string) (*Postgres, error) {
 		&gormModels.UserPlants{},
 
 		&gormModels.CustomPlant{},
+		&gormModels.SavedPlant{},
 	)
 
 	return &Postgres{
@@ -189,4 +190,42 @@ func (db *Postgres) DeleteCustomPlant(userID, plantID uint64) error {
 		return err
 	}
 	return nil
+}
+
+func (db *Postgres) CreateSavedPlant(userID, plantID uint64) error {
+	if err := db.DB.Create(&gormModels.SavedPlant{
+		UserID:  userID,
+		PlantID: plantID,
+	}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *Postgres) DeleteSavedPlant(userID, plantID uint64) error {
+	if err := db.DB.Where("user_id = ? AND plant_id = ?", userID, plantID).
+		Delete(&gormModels.SavedPlant{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *Postgres) GetSavedPlants(userID uint64) ([]gormModels.SavedPlant, error) {
+	var plantRows []gormModels.SavedPlant
+	if err := db.DB.Model(&gormModels.SavedPlant{
+		UserID: userID,
+	}).Find(&plantRows).Error; err != nil {
+		return []gormModels.SavedPlant{}, err
+	}
+	return plantRows, nil
+}
+
+func (db *Postgres) GetSavedPlantByIDs(userID, plantID uint64) (gormModels.SavedPlant, error) {
+	var plantRow gormModels.SavedPlant
+	if err := db.DB.Model(&gormModels.SavedPlant{}).
+		Where("user_id = ? AND plant_id = ?", userID, plantID).
+		First(&plantRow).Error; err != nil {
+		return gormModels.SavedPlant{}, err
+	}
+	return plantRow, nil
 }

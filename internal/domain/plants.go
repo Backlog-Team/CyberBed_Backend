@@ -20,4 +20,8 @@ type PlantsUsecase interface {
 	GetCustomPlant(userID, plantID uint64) (httpModels.CustomPlant, error)
 	DeleteCustomPlant(userID, plantID uint64) error
 	GetCustomPlantImage(userID, plantID uint64) (string, error)
+
+	CreateSavedPlant(userID, plantID uint64) error
+	GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, error)
+	DeleteSavedPlant(userID, plantID uint64) error
 }

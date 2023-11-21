@@ -248,3 +248,45 @@ func (u PlantsUsecase) GetCustomPlantImage(userID, plantID uint64) (string, erro
 func (u PlantsUsecase) DeleteCustomPlant(userID, plantID uint64) error {
 	return u.plantsRepository.DeleteCustomPlant(userID, plantID)
 }
+
+func (u PlantsUsecase) CreateSavedPlant(userID, plantID uint64) error {
+	_, err := u.plantsRepository.GetSavedPlantByIDs(userID, plantID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return u.plantsRepository.CreateSavedPlant(userID, plantID)
+		}
+		return err
+	}
+
+	return errors.Wrapf(
+		httpModels.ErrRecordExists,
+		"plant {%d} was saved earlier by user {%d}",
+		plantID,
+		userID,
+	)
+}
+
+func (u PlantsUsecase) GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, error) {
+	savedPlants, err := u.plantsRepository.GetSavedPlants(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []httpModels.XiaomiPlant{}, nil
+		}
+		return []httpModels.XiaomiPlant{}, err
+	}
+
+	resPlants := make([]httpModels.XiaomiPlant, 0)
+	for _, pl := range savedPlants {
+		recievedPlant, err := u.plantsRepository.GetPlantByID(pl.PlantID)
+		if err != nil {
+			return nil, err
+		}
+		resPlants = append(resPlants, httpModels.XiaomiPlantGormToHttp(recievedPlant))
+	}
+
+	return resPlants, nil
+}
+
+func (u PlantsUsecase) DeleteSavedPlant(userID, plantID uint64) error {
+	return u.plantsRepository.DeleteSavedPlant(userID, plantID)
+}
