@@ -1,8 +1,6 @@
 package plantsRepository
 
 import (
-	"strings"
-
 	"github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -112,7 +110,7 @@ func (db *Postgres) GetByPlantName(plantName string) ([]gormModels.XiaomiPlant, 
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
 		Preload("Parameter").
-		Where("plant_id LIKE ? OR display_pid LIKE ?", "%"+strings.ToLower(plantName)+"%", "%"+plantName+"%").
+		Where("plant_id LIKE LOWER(?) OR LOWER(display_pid) LIKE LOWER(?) ", "%"+plantName+"%", "%"+plantName+"%").
 		Limit(10).
 		Find(&plants).Error; err != nil {
 		return nil, err
