@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/cyber_bed/internal/domain"
+	gormModels "github.com/cyber_bed/internal/models/gorm"
 	httpModels "github.com/cyber_bed/internal/models/http"
 )
 
@@ -24,11 +25,25 @@ func NewFoldersUsecase(
 }
 
 func (f FoldersUsecase) CreateFolder(folder httpModels.Folder) (uint64, error) {
-	folderID, err := f.foldersRepository.CreateFolder(folder)
+	_, err := f.foldersRepository.GetFolderByNameAndID(gormModels.Folder{
+		ID:         folder.ID,
+		FolderName: folder.FolderName,
+	})
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			folderID, err := f.foldersRepository.CreateFolder(folder)
+			if err != nil {
+				return 0, err
+			}
+			return folderID, nil
+		}
 		return 0, err
 	}
-	return folderID, nil
+	return 0, errors.Wrapf(
+		httpModels.ErrRecordExists,
+		"folder with name {%s} already exists",
+		folder.FolderName,
+	)
 }
 
 func (f FoldersUsecase) GetFolderByID(id uint64) (httpModels.Folder, error) {
