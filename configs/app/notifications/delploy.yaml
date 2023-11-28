@@ -1,0 +1,12 @@
+server:
+  address: "0.0.0.0"
+  port: 1234
+
+database:
+  user: "postgres"
+  dbname: "cyber_garden"
+  host: "postgres"
+  port: 5432
+  sslmode: "disable"
+
+logger_level: "debug"

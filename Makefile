@@ -8,6 +8,14 @@ LINTER=golangci-lint
 DOCKER_IMAGES=$(docker images -aq)
 DOCKER_VOLUMES=$(docker volume ls -q)
 
+build_api:
+	go build -o bin/ cmd/api/main.go
+
+build_notifications:
+	go build -o bin/ cmd/notifications/notifications.go
+
+build_local: build_api build_notifications
+
 lint:
 	$(LINTER) run -c configs/.golangci.yaml
 
