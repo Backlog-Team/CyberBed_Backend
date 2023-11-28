@@ -87,6 +87,7 @@ func (h WebSocket) Handler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if len(notifications) > 0 {
+				// If we have notifications with expired time
 				err = c.WriteJSON(notifications)
 				handleError(tracerr.Wrap(err), c, log)
 				for _, n := range notifications {

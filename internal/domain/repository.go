@@ -44,7 +44,7 @@ type FoldersRepository interface {
 	CreateFolder(folder httpModels.Folder) (uint64, error)
 	GetFolders(userID uint64) ([]gormModels.Folder, error)
 	GetFolder(id uint64) (gormModels.Folder, error)
-	GetFolderByNameAndID(folder gormModels.Folder) (gormModels.Folder, error)
+	GetFolderByName(folderName string) (gormModels.Folder, error)
 	DeleteFolder(id uint64) error
 	GetPlantsID(folderID uint64) ([]uint64, error)
 	AddPlantToFolder(folderID, plantID uint64) error
@@ -53,7 +53,7 @@ type FoldersRepository interface {
 }
 
 type NotificationsRepository interface {
-	CreateNotification(notification gormModels.Notification) (uint64, error)
+	CreateNotification(notification gormModels.Notification) (gormModels.Notification, error)
 	GetNotificationsByUserID(userID uint64) ([]gormModels.Notification, error)
 	GetNotificationsByUserIDAndStatus(
 		userID uint64,

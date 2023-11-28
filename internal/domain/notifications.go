@@ -6,8 +6,8 @@ import (
 )
 
 type NotificationsUsecase interface {
-	CreateNotification(notification httpModels.Notification) (uint64, error)
-	GetNotificationsByUserID(userID uint64) ([]gormModels.Notification, error)
+	CreateNotification(notification httpModels.Notification) (httpModels.Notification, error)
+	GetNotificationsByUserID(userID uint64) ([]httpModels.Notification, error)
 	GetNotificationsByUserIDAndStatus(
 		userID uint64,
 		status gormModels.NotificationStatus,

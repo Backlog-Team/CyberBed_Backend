@@ -19,7 +19,9 @@ type Notification struct {
 	ID             uint64
 	UserID         uint64
 	PlantID        uint64
+	FolderID       uint64
 	ExpirationTime time.Time
+	Period         string
 	Status         NotificationStatus `gorm:"default:wait"`
 }
 
