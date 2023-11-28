@@ -14,7 +14,7 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=builder /github.com/cyber_bed/bin/notifications .
-COPY --from=builder /github.com/cyber_bed/configs/ configs/
+COPY --from=BUILDER /github.com/cyber_bed/bin/notifications .
+COPY --from=BUILDER /github.com/cyber_bed/configs/ configs/
 
 CMD ["./notifications", "-ConfigPath", "configs/app/notifications/deploy.yaml"]
