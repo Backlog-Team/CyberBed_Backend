@@ -9,17 +9,24 @@ import (
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
 	httpModels "github.com/cyber_bed/internal/models/http"
+	"github.com/cyber_bed/internal/utils/converter"
 )
 
 type FoldersHandler struct {
-	foldersUsecase domain.FoldersUsecase
-	usersUsecase   domain.UsersUsecase
+	foldersUsecase       domain.FoldersUsecase
+	usersUsecase         domain.UsersUsecase
+	notificationsUsecase domain.NotificationsUsecase
 }
 
-func NewFoldersHandler(f domain.FoldersUsecase, a domain.UsersUsecase) FoldersHandler {
+func NewFoldersHandler(
+	f domain.FoldersUsecase,
+	a domain.UsersUsecase,
+	n domain.NotificationsUsecase,
+) FoldersHandler {
 	return FoldersHandler{
-		foldersUsecase: f,
-		usersUsecase:   a,
+		foldersUsecase:       f,
+		usersUsecase:         a,
+		notificationsUsecase: n,
 	}
 }
 
@@ -91,6 +98,16 @@ func (h FoldersHandler) GetPlantsFromFolder(c echo.Context) error {
 }
 
 func (h FoldersHandler) AddPlantToFolder(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
 	folderID, err := strconv.ParseUint(c.Param("folderID"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
@@ -100,9 +117,24 @@ func (h FoldersHandler) AddPlantToFolder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
+	duration := c.QueryParam("wateringTime")
+	_, err = converter.StringToTime(duration)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
 	if err := h.foldersUsecase.AddPlantToFolder(folderID, plantID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+
+	if _, err = h.notificationsUsecase.CreateNotification(httpModels.Notification{
+		UserID:         userID,
+		PlantID:        plantID,
+		ExpirationTime: duration,
+	}); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
 	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
 

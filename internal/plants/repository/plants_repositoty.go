@@ -28,6 +28,7 @@ func NewPostgres(url string) (*Postgres, error) {
 
 		&gormModels.CustomPlant{},
 		&gormModels.SavedPlant{},
+		&gormModels.PlantStat{},
 	)
 
 	return &Postgres{

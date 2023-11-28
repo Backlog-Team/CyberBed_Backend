@@ -2,8 +2,8 @@ version: "3.3"
 services:
   backend:
     hostname: app
-    container_name: cyberbed-image
-    image: milchenko/cyberbed-image
+    container_name: cyberbed-api
+    image: milchenko/cyberbed-api
     ports:
       - "8080:8080"
     env_file:
@@ -33,6 +33,17 @@ services:
       DATABASE_HOST: postgres
     volumes:
       - data:/var/lib/postgresql/data
+    networks:
+      - server
+
+  notifications:
+    hostname: notifications
+    container_name: cyberbed-notifications
+    image: milchenko/cyberbed-notifications
+    ports:
+      - "1234:1234"
+    depends_on:
+      - postgres
     networks:
       - server
 

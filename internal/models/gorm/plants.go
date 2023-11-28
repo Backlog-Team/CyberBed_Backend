@@ -40,6 +40,14 @@ type SavedPlant struct {
 	PlantID uint64
 }
 
+type PlantStat struct {
+	gorm.Model
+	PlantID uint64
+	UserID  uint64
+	IsLiked bool `gorm:"default:false"`
+	IsSaved bool `gorm:"default:false"`
+}
+
 type XiaomiPlant struct {
 	gorm.Model
 	ID          uint64

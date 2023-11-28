@@ -50,3 +50,22 @@ type FoldersRepository interface {
 	AddPlantToFolder(folderID, plantID uint64) error
 	UpdateFolderPlant(folderID, plantID uint64) error
 }
+
+type NotificationsRepository interface {
+	CreateNotification(notification gormModels.Notification) (uint64, error)
+	GetNotificationsByUserID(userID uint64) ([]gormModels.Notification, error)
+	GetNotificationsByUserIDAndStatus(
+		userID uint64,
+		status gormModels.NotificationStatus,
+	) ([]gormModels.Notification, error)
+	GetNotificationByID(id uint64) (gormModels.Notification, error)
+	UpdateNotificationStatus(
+		id uint64,
+		status gormModels.NotificationStatus,
+	) error
+	DeleteNotification(id uint64) error
+	DeleteNotificationByIDAndStatus(
+		id uint64,
+		status gormModels.NotificationStatus,
+	) error
+}

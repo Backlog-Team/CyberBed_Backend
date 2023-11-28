@@ -8,11 +8,14 @@ LINTER=golangci-lint
 DOCKER_IMAGES=$(docker images -aq)
 DOCKER_VOLUMES=$(docker volume ls -q)
 
-build:
-	$(GOBUILD) -o bin/ $(BINARY_NAME)
-
 lint:
 	$(LINTER) run -c configs/.golangci.yaml
+
+run_api:
+	go run cmd/api/main.go -ConfigPath ./configs/app/api/local.yaml
+
+run_notifications:
+	go run ./cmd/notifications/notifications.go -ConfigPath ./configs/app/notifications/local.yaml
 
 docker_up: docker_clean_full
 	docker compose up -d
