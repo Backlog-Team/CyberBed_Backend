@@ -80,7 +80,8 @@ func (s *Server) init() {
 	}
 
 	if s.Config.TranslateMode {
-		if err := migrations.TranslatePlants(s.Config.Database.InitDB.PathToDir); err != nil {
+		s.Echo.Logger.Info("starting translate mode")
+		if err := migrations.TranslatePlants(s.Config.Database.InitDB.PathToDir, ""); err != nil {
 			s.Echo.Logger.Error(err)
 		}
 	}

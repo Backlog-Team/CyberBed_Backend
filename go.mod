@@ -15,6 +15,7 @@ require (
 	github.com/ztrue/tracerr v0.4.0
 	golang.org/x/crypto v0.14.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
+	golang.org/x/sync v0.5.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.5.3
 	gorm.io/gorm v1.25.5
