@@ -96,3 +96,14 @@ func (db *Postgres) DeleteNotificationByIDAndStatus(
 	}
 	return nil
 }
+
+func (db *Postgres) UpdatePeriodNotification(notification gormModels.Notification) error {
+	if err := db.DB.Model(&gormModels.Notification{}).
+		Where("id = ?", notification.ID).
+		Update("period", notification.Period).
+		Update("expiration_time", notification.ExpirationTime).
+		Error; err != nil {
+		return err
+	}
+	return nil
+}

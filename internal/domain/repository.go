@@ -69,4 +69,5 @@ type NotificationsRepository interface {
 		id uint64,
 		status gormModels.NotificationStatus,
 	) error
+	UpdatePeriodNotification(notification gormModels.Notification) error
 }

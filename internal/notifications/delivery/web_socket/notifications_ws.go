@@ -13,6 +13,7 @@ import (
 
 	"github.com/cyber_bed/internal/domain"
 	gormModels "github.com/cyber_bed/internal/models/gorm"
+	httpModels "github.com/cyber_bed/internal/models/http"
 	logger "github.com/cyber_bed/pkg"
 )
 
@@ -22,8 +23,6 @@ type WebSocket struct {
 }
 
 type status struct {
-	Remove      chan interface{}
-	RemoveAll   chan interface{}
 	CloseReader chan interface{}
 	CloseWriter chan interface{}
 }
@@ -73,8 +72,10 @@ func (h WebSocket) Handler(w http.ResponseWriter, r *http.Request) {
 				if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 					handleError(tracerr.Wrap(err), c, log)
 				}
-				err = c.WriteJSON(notifications)
-				handleError(tracerr.Wrap(err), c, log)
+				if len(notifications) > 0 {
+					err = c.WriteJSON(notifications)
+					handleError(tracerr.Wrap(err), c, log)
+				}
 				firstLoop = false
 			}
 
@@ -91,9 +92,18 @@ func (h WebSocket) Handler(w http.ResponseWriter, r *http.Request) {
 				err = c.WriteJSON(notifications)
 				handleError(tracerr.Wrap(err), c, log)
 				for _, n := range notifications {
-					if err := h.u.UpdateNotificationStatus(n.ID, gormModels.NotificationStatusFinish); err != nil {
+					newNotification, err := h.u.CreateNotification(httpModels.Notification{
+						UserID:         n.UserID,
+						FolderID:       n.FolderID,
+						PlantID:        n.PlantID,
+						ExpirationTime: n.Period,
+					})
+					if err != nil {
 						handleError(tracerr.Wrap(err), c, log)
+						continue
 					}
+					err = c.WriteJSON(newNotification)
+					handleError(tracerr.Wrap(err), c, log)
 				}
 			} else {
 				// Trigger our hook to check state of notifications

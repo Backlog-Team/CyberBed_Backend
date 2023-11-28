@@ -88,7 +88,11 @@ func (u NotificationsUsecase) UpdateNotificationStatus(
 }
 
 func (u NotificationsUsecase) GetNotificationByID(id uint64) (httpModels.Notification, error) {
-	return httpModels.Notification{}, nil
+	notification, err := u.notificationsRepository.GetNotificationByID(id)
+	if err != nil {
+		return httpModels.Notification{}, err
+	}
+	return httpModels.NotificationGormToHttp(notification), nil
 }
 
 func (u NotificationsUsecase) DeleteNotification(id uint64) error {
@@ -100,4 +104,8 @@ func (u NotificationsUsecase) DeleteNotificationByIDAndStatus(
 	status gormModels.NotificationStatus,
 ) error {
 	return u.notificationsRepository.DeleteNotificationByIDAndStatus(id, status)
+}
+
+func (u NotificationsUsecase) UpdatePeriodNotification(notification gormModels.Notification) error {
+	return u.notificationsRepository.UpdatePeriodNotification(notification)
 }

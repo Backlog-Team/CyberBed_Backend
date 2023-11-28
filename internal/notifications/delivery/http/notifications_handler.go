@@ -28,6 +28,28 @@ func NewNotificationsHandler(
 	}
 }
 
+func (h NotificationsHandler) UpdatePeriod(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+  notificationID, err := strconv.ParseUint(c.Param("notificationID"), 10, 64) 
+  if err != nil {
+    return echo.NewHTTPError(http.StatusBadRequest, err)
+  }
+
+	period := c.QueryParam("period")
+  if _, 
+
+	return c.JSON(http.StatusOK)
+}
+
 func (h NotificationsHandler) GetNotifications(c echo.Context) error {
 	cookie, err := httpAuth.GetCookie(c)
 	if err != nil {
