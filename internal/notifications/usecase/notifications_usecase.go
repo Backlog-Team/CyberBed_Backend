@@ -106,6 +106,6 @@ func (u NotificationsUsecase) DeleteNotificationByIDAndStatus(
 	return u.notificationsRepository.DeleteNotificationByIDAndStatus(id, status)
 }
 
-func (u NotificationsUsecase) UpdatePeriodNotification(notification gormModels.Notification) error {
-	return u.notificationsRepository.UpdatePeriodNotification(notification)
+func (u NotificationsUsecase) UpdatePeriodNotification(notification httpModels.Notification) error {
+	return u.notificationsRepository.UpdatePeriodNotification(gormModels.Notification{})
 }
