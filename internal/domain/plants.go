@@ -8,7 +8,7 @@ import (
 type PlantsUsecase interface {
 	AddPlant(plant httpModels.Plant) error
 	GetPlant(userID uint64, plantID int64) (httpModels.Plant, error)
-	GetPlants(userID uint64) ([]httpModels.XiaomiPlant, error)
+	GetPlants(userID uint64) (map[uint64]httpModels.XiaomiPlant, error)
 	DeletePlant(userID, plantID uint64) error
 	GetPlantByID(plantID uint64) (gormModels.XiaomiPlant, error)
 	GetPlantByName(plantName string) ([]httpModels.XiaomiPlant, error)

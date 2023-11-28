@@ -64,10 +64,13 @@ type XiaomiPlant struct {
 		MaxSoilEc    uint64 `             json:"max_soil_ec"`
 		MinSoilEc    uint64 `             json:"min_soil_ec"`
 	} `json:"parameter"`
+	IsLiked     bool     `json:"isLiked"`
+	IsSaved     bool     `json:"isSaved"`
+	FolderSaved []Folder `json:"folderSaved"`
 }
 
 func XiaomiPlantGormToHttp(plant gormModels.XiaomiPlant) XiaomiPlant {
-	return XiaomiPlant{
+	res := XiaomiPlant{
 		ID:         plant.ID,
 		PlantID:    plant.PlantID,
 		DisplayPid: plant.DisplayPid,
@@ -128,7 +131,10 @@ func XiaomiPlantGormToHttp(plant gormModels.XiaomiPlant) XiaomiPlant {
 			MaxSoilEc:    plant.Parameter.MaxSoilEc,
 			MinSoilEc:    plant.Parameter.MinSoilEc,
 		},
+		IsLiked: plant.IsLiked,
+		IsSaved: plant.IsSaved,
 	}
+	return res
 }
 
 func CustomPlantGormToHttp(plant gormModels.CustomPlant) CustomPlant {

@@ -60,8 +60,18 @@ func (db *Postgres) AddUserPlantsRelations(userID uint64, plantsID []int64) erro
 			return res.Error
 		}
 	} else {
-		newPlantIDs := userPlant[0].PlantsID
-		newPlantIDs = append(newPlantIDs, plantsID...)
+		plantsMap := make(map[uint64]bool)
+		for _, pid := range userPlant[0].PlantsID {
+			plantsMap[uint64(pid)] = true
+		}
+		for _, pid := range plantsID {
+			plantsMap[uint64(pid)] = true
+		}
+
+		newPlantIDs := make(pq.Int64Array, 0)
+		for key := range plantsMap {
+			newPlantIDs = append(newPlantIDs, int64(key))
+		}
 
 		res := db.DB.Table(gormModels.PlantsTable).Where("user_id = ?", userID).Update("plants_id", &newPlantIDs)
 		if res.Error != nil {

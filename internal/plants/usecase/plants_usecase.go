@@ -110,14 +110,14 @@ func (u PlantsUsecase) GetPlant(userID uint64, plantID int64) (httpModels.Plant,
 	}, nil
 }
 
-func (u PlantsUsecase) GetPlants(userID uint64) ([]httpModels.XiaomiPlant, error) {
+func (u PlantsUsecase) GetPlants(userID uint64) (map[uint64]httpModels.XiaomiPlant, error) {
 	plantsIDs, err := u.plantsRepository.GetPlantsByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
 	pl := plantsIDs.PlantsID
-	plants := make([]httpModels.XiaomiPlant, 0)
+	plants := make(map[uint64]httpModels.XiaomiPlant, 0)
 	for _, p := range pl {
 		curPlant, err := u.plantsRepository.GetPlantByID(uint64(p))
 		if err != nil {
@@ -126,7 +126,8 @@ func (u PlantsUsecase) GetPlants(userID uint64) ([]httpModels.XiaomiPlant, error
 			}
 			return nil, err
 		}
-		plants = append(plants, httpModels.XiaomiPlantGormToHttp(curPlant))
+		plants[curPlant.ID] = httpModels.XiaomiPlantGormToHttp(curPlant)
+		// plants = append(plants, httpModels.XiaomiPlantGormToHttp(curPlant))
 	}
 
 	return plants, nil

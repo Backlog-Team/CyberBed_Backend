@@ -1,6 +1,7 @@
 package httpPlants
 
 import (
+	"errors"
 	"io"
 	"mime"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
@@ -17,22 +19,35 @@ import (
 )
 
 type PlantsHandler struct {
-	plantsUsecase domain.PlantsUsecase
-	usersUsecase  domain.UsersUsecase
+	plantsUsecase  domain.PlantsUsecase
+	usersUsecase   domain.UsersUsecase
+	foldersUsecase domain.FoldersUsecase
 }
 
 func NewPlantsHandler(
 	p domain.PlantsUsecase,
 	u domain.UsersUsecase,
 	pl domain.PlantsAPI,
+	f domain.FoldersUsecase,
 ) PlantsHandler {
 	return PlantsHandler{
-		plantsUsecase: p,
-		usersUsecase:  u,
+		plantsUsecase:  p,
+		usersUsecase:   u,
+		foldersUsecase: f,
 	}
 }
 
 func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
 	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
@@ -43,7 +58,29 @@ func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.JSON(http.StatusOK, httpModels.XiaomiPlantGormToHttp(plant))
+	httpPlant := httpModels.XiaomiPlantGormToHttp(plant)
+	// Check if plant is liked
+	likedPlants, err := h.plantsUsecase.GetPlants(userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+	if _, exists := likedPlants[httpPlant.ID]; exists {
+		httpPlant.IsLiked = true
+	}
+
+	// Check if plant was saved
+	foldersToCheck, err := h.foldersUsecase.GetFolderByPlantAndUserID(plantID, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+	for k, f := range foldersToCheck {
+		if _, exists := f[httpPlant.ID]; exists {
+			httpPlant.IsSaved = true
+			httpPlant.FolderSaved = append(httpPlant.FolderSaved, k)
+		}
+	}
+
+	return c.JSON(http.StatusOK, httpPlant)
 }
 
 func (h PlantsHandler) GetPlantImage(c echo.Context) error {
@@ -68,6 +105,16 @@ func (h PlantsHandler) GetPlantImage(c echo.Context) error {
 }
 
 func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
 	pageStr := c.QueryParam("page")
 	if pageStr == "" {
 		plantName := c.QueryParam("name")
@@ -86,6 +133,34 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 	plants, err := h.plantsUsecase.GetPlantsPage(pageNum)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+
+	// Check each plant if it was liked
+	toCheckLiked, err := h.plantsUsecase.GetPlants(userID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+	for _, v := range plants {
+		if _, exists := toCheckLiked[v.ID]; exists {
+			plants[v.ID].IsLiked = true
+		}
+	}
+
+	// Check if plant was saved
+	for i, pl := range plants {
+		foldersToCheck, err := h.foldersUsecase.GetFolderByPlantAndUserID(pl.ID, userID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				continue
+			}
+			return echo.NewHTTPError(http.StatusNotFound, err)
+		}
+		for k, f := range foldersToCheck {
+			if _, exists := f[pl.ID]; exists {
+				plants[i].IsSaved = true
+				plants[i].FolderSaved = append(plants[i].FolderSaved, k)
+			}
+		}
 	}
 
 	return c.JSON(http.StatusOK, plants)
@@ -166,7 +241,41 @@ func (h PlantsHandler) GetPlants(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, plants)
+	// Converting map to slice
+	resPlants := make([]httpModels.XiaomiPlant, 0)
+	for _, v := range plants {
+		resPlants = append(resPlants, v)
+	}
+
+	// Check each plant if it was liked
+	// toCheckLiked, err := h.plantsUsecase.GetPlants(userID)
+	// if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	// 	return echo.NewHTTPError(http.StatusNotFound, err)
+	// }
+	// for _, v := range plants {
+	// if _, exists := plants[v.ID]; exists {
+	// 	plants[v.ID].IsLiked = true
+	// }
+	// }
+
+	// Check if plant was saved
+	// for i, pl := range plants {
+	// 	foldersToCheck, err := h.foldersUsecase.GetFolderByPlantAndUserID(pl.ID, userID)
+	// 	if err != nil {
+	// 		if errors.Is(err, gorm.ErrRecordNotFound) {
+	// 			continue
+	// 		}
+	// 		return echo.NewHTTPError(http.StatusNotFound, err)
+	// 	}
+	// 	for k, f := range foldersToCheck {
+	// 		if _, exists := f[pl.ID]; exists {
+	// 			plants[i].IsSaved = true
+	// 			plants[i].FolderSaved = append(plants[i].FolderSaved, k)
+	// 		}
+	// 	}
+	// }
+
+	return c.JSON(http.StatusOK, resPlants)
 }
 
 func (h PlantsHandler) DeletePlant(c echo.Context) error {

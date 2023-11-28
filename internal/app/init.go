@@ -96,7 +96,12 @@ func (s *Server) Start() error {
 func (s *Server) MakeHandlers() {
 	s.recHandler = http.NewHandler(s.recUsecase)
 	s.authHandler = httpAuth.NewAuthHandler(s.authUsecase, s.usersUsecase, s.Config.CookieSettings)
-	s.plantsHandler = httpPlants.NewPlantsHandler(s.plantsUsecase, s.usersUsecase, s.plantsAPI)
+	s.plantsHandler = httpPlants.NewPlantsHandler(
+		s.plantsUsecase,
+		s.usersUsecase,
+		s.plantsAPI,
+		s.foldersUsecase,
+	)
 	s.foldersHandler = foldersHandler.NewFoldersHandler(
 		s.foldersUsecase,
 		s.usersUsecase,

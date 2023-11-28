@@ -49,6 +49,7 @@ type FoldersRepository interface {
 	GetPlantsID(folderID uint64) ([]uint64, error)
 	AddPlantToFolder(folderID, plantID uint64) error
 	UpdateFolderPlant(folderID, plantID uint64) error
+	GetFolderByPlantAndUserID(userID, plantID uint64) ([]gormModels.Folder, error)
 }
 
 type NotificationsRepository interface {

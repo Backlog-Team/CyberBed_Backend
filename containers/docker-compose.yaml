@@ -43,7 +43,8 @@ services:
     ports:
       - "1234:1234"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - server
 

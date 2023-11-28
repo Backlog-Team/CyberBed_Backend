@@ -1,8 +1,9 @@
 name: deploy
 on:
-  push:
-    branches:
-      - "main"
+  [push]
+  # push:
+  #   branches:
+  #     - "main"
 
 jobs:
   build_and_push:
@@ -35,5 +36,6 @@ jobs:
             echo 'RECOGNIZE_API_TOKEN=$RECOGNIZE_API_TOKEN\nTREFLE_API_TOKEN=$TREFLE_API_TOKEN\nPERENUAL_API_TOKEN=$PERENUAL_API_TOKEN' > ~/backend/.env.prod
 
             cd ~/backend
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-image
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-api
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-notifications
             docker compose up -d

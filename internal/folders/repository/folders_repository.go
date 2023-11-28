@@ -158,3 +158,14 @@ func (db *Postgres) UpdateFolderPlant(folderID, plantID uint64) error {
 	}
 	return nil
 }
+
+func (db *Postgres) GetFolderByPlantAndUserID(userID, plantID uint64) ([]gormModels.Folder, error) {
+	var folderRow []gormModels.Folder
+	if err := db.DB.Model(&gormModels.PlantFolderRelation{}).
+		Joins("JOIN folders ON plant_folder_relations.folder_id=folders.id").
+		Where("user_id = ? AND plants_id @> ARRAY[?]::integer[]", userID, plantID).
+		Find(&folderRow).Error; err != nil {
+		return []gormModels.Folder{}, err
+	}
+	return folderRow, nil
+}

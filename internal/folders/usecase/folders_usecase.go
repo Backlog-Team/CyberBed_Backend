@@ -123,3 +123,24 @@ func (f FoldersUsecase) AddPlantToFolder(folderID, plantID uint64) error {
 func (f FoldersUsecase) DeletePlantFromFolder(folderID, plantID uint64) error {
 	return f.foldersRepository.UpdateFolderPlant(folderID, plantID)
 }
+
+func (f FoldersUsecase) GetFolderByPlantAndUserID(
+	plantID, userID uint64,
+) (map[httpModels.Folder]map[uint64]bool, error) {
+	folders, err := f.foldersRepository.GetFolderByPlantAndUserID(userID, plantID)
+	if err != nil {
+		return make(map[httpModels.Folder]map[uint64]bool), err
+	}
+
+	// map[Folder] -> map[plants_id]
+	resMap := make(map[httpModels.Folder]map[uint64]bool, 0)
+	for _, v := range folders {
+		curMap := make(map[uint64]bool)
+		for _, val := range v.PlantsRelation.PlantsID {
+			curMap[uint64(val)] = true
+		}
+		resMap[httpModels.FolderGormToHttp(v)] = curMap
+	}
+
+	return resMap, nil
+}
