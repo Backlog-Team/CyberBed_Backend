@@ -8,7 +8,7 @@ COPY . /github.com/cyber_bed/
 WORKDIR /github.com/cyber_bed/
 
 RUN go mod download
-RUN GOOS=linux go build -o ./bin/server ./cmd/main.go
+RUN GOOS=linux go build -o ./bin/server ./cmd/api/main.go
 
 FROM alpine:latest
 
