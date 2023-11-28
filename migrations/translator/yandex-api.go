@@ -67,7 +67,7 @@ func Translate(ctx context.Context, message, apiKey string) (string, error) {
 		Method(http.MethodPost).
 		BodyJSON(NewMsg(message)).
 		Header("Content-Type", "application/json").
-		Header("Authorization", "Api-Key AQVN145WrYv0NdJ1Kz2yMYZ010mtMV7Mm7bsC8Tn").
+		Header("Authorization", "Api-Key").
 		ToJSON(&resp).
 		Fetch(ctx); err != nil {
 		return "", errors.Wrapf(err, "failed to translate %s", message)
