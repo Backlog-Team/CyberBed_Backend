@@ -24,12 +24,14 @@ func NewPostgres(url string) (*Postgres, error) {
 	}, nil
 }
 
-func (db *Postgres) CreateNotification(notification gormModels.Notification) (uint64, error) {
+func (db *Postgres) CreateNotification(
+	notification gormModels.Notification,
+) (gormModels.Notification, error) {
 	var resRow gormModels.Notification
 	if err := db.DB.Create(&notification).Scan(&resRow).Error; err != nil {
-		return 0, err
+		return gormModels.Notification{}, err
 	}
-	return resRow.ID, nil
+	return resRow, nil
 }
 
 func (db *Postgres) GetNotificationsByUserID(userID uint64) ([]gormModels.Notification, error) {

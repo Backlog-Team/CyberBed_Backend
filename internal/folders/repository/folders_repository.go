@@ -66,9 +66,10 @@ func (db *Postgres) GetFolder(id uint64) (gormModels.Folder, error) {
 	return folderRow, nil
 }
 
-func (db *Postgres) GetFolderByNameAndID(folder gormModels.Folder) (gormModels.Folder, error) {
+func (db *Postgres) GetFolderByName(folderName string) (gormModels.Folder, error) {
 	var folderRow gormModels.Folder
-	if err := db.DB.Model(&folder).
+	if err := db.DB.Model(&gormModels.Folder{}).
+		Where("folder_name = ?", folderName).
 		First(&folderRow).
 		Error; err != nil {
 		return gormModels.Folder{}, err

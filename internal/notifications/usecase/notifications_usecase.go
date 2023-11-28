@@ -23,35 +23,43 @@ func NewNotificationsUsecase(r domain.NotificationsRepository) domain.Notificati
 
 func (u NotificationsUsecase) CreateNotification(
 	notification httpModels.Notification,
-) (uint64, error) {
+) (httpModels.Notification, error) {
 	futureTime, err := converter.StringToTime(notification.ExpirationTime)
 	if err != nil {
-		return 0, err
+		return httpModels.Notification{}, err
 	}
 
-	id, err := u.notificationsRepository.CreateNotification(gormModels.Notification{
+	nf, err := u.notificationsRepository.CreateNotification(gormModels.Notification{
 		UserID:         notification.UserID,
 		PlantID:        notification.PlantID,
+		FolderID:       notification.FolderID,
 		ExpirationTime: futureTime,
+		Period:         notification.ExpirationTime,
+		Status:         gormModels.NotificationStatusWaiting,
 	})
 	if err != nil {
-		return 0, err
+		return httpModels.Notification{}, err
 	}
-	return id, nil
+	return httpModels.NotificationGormToHttp(nf), nil
 }
 
 func (u NotificationsUsecase) GetNotificationsByUserID(
 	userID uint64,
-) ([]gormModels.Notification, error) {
+) ([]httpModels.Notification, error) {
 	notifications, err := u.notificationsRepository.GetNotificationsByUserID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return []gormModels.Notification{}, nil
+			return []httpModels.Notification{}, nil
 		}
 		return nil, err
 	}
 
-	return notifications, nil
+	httpNotifications := make([]httpModels.Notification, 0)
+	for _, n := range notifications {
+		httpNotifications = append(httpNotifications, httpModels.NotificationGormToHttp(n))
+	}
+
+	return httpNotifications, nil
 }
 
 func (u NotificationsUsecase) GetNotificationsByUserIDAndStatus(

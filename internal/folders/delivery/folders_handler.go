@@ -130,6 +130,7 @@ func (h FoldersHandler) AddPlantToFolder(c echo.Context) error {
 	if _, err = h.notificationsUsecase.CreateNotification(httpModels.Notification{
 		UserID:         userID,
 		PlantID:        plantID,
+		FolderID:       folderID,
 		ExpirationTime: duration,
 	}); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
