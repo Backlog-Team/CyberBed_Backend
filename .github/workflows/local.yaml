@@ -97,6 +97,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            
+            
             docker exec -i postgresql /bin/bash -c "pg_dump --username postgres cyber_garden" > ~/backup/dump.sql
             docker rm -f $(docker ps -aq)
 
@@ -106,6 +108,7 @@ jobs:
             echo 'RECOGNIZE_API_TOKEN=$RECOGNIZE_API_TOKEN\nTREFLE_API_TOKEN=$TREFLE_API_TOKEN\nPERENUAL_API_TOKEN=$PERENUAL_API_TOKEN' > ~/backend/.env.prod
 
             cd ~/backend/containers
+            mv ../migrations .
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-api
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-notifications
             docker compose up -d
