@@ -131,7 +131,7 @@ func (db *Postgres) GetByPlantName(plantName string) ([]gormModels.XiaomiPlant, 
 
 func (db *Postgres) GetPlantsPage(pageNum uint64) ([]gormModels.XiaomiPlant, error) {
 	pageSize := 10
-	offset := (pageSize - 1) * int(pageNum-1)
+	offset := pageSize * int(pageNum-1)
 	var plants []gormModels.XiaomiPlant
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").

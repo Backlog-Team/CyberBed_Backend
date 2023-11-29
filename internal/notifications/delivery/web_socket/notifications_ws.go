@@ -81,7 +81,7 @@ func (h WebSocket) Handler(w http.ResponseWriter, r *http.Request) {
 
 			notifications, err := h.u.GetNotificationsByUserIDAndStatus(
 				userID,
-				gormModels.NotificationStatusDone,
+				gormModels.NotificationStatusSending,
 			)
 			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				handleError(tracerr.Wrap(err), c, log)
@@ -89,9 +89,19 @@ func (h WebSocket) Handler(w http.ResponseWriter, r *http.Request) {
 
 			if len(notifications) > 0 {
 				// If we have notifications with expired time
-				err = c.WriteJSON(notifications)
 				handleError(tracerr.Wrap(err), c, log)
-				for _, n := range notifications {
+				for i, n := range notifications {
+					// Update status on done and send notification
+					err = h.u.UpdateNotificationStatus(n.ID, gormModels.NotificationStatusDone)
+					if err != nil {
+						handleError(tracerr.Wrap(err), c, log)
+						continue
+					}
+					notifications[i].Status = gormModels.NotificationStatusDone
+					c.WriteJSON(httpModels.NotificationGormToHttp(notifications[i]))
+					handleError(tracerr.Wrap(err), c, log)
+
+					// Schedule new notification and send it too
 					newNotification, err := h.u.CreateNotification(httpModels.Notification{
 						UserID:         n.UserID,
 						FolderID:       n.FolderID,

@@ -3,10 +3,11 @@ package migrations
 import (
 	"context"
 	"encoding/json"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"os"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	gormModels "github.com/cyber_bed/internal/models/gorm"
 	"github.com/cyber_bed/migrations/translator"
@@ -89,15 +90,27 @@ func TranslatePlants(pathToDir, apiKey string) error {
 			if err != nil {
 				return err
 			}
-			plantItem.Basic.Production, err = translator.Translate(ctx, plantItem.Basic.Production, apiKey)
+			plantItem.Basic.Production, err = translator.Translate(
+				ctx,
+				plantItem.Basic.Production,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}
-			plantItem.Basic.Category, err = translator.Translate(ctx, plantItem.Basic.Category, apiKey)
+			plantItem.Basic.Category, err = translator.Translate(
+				ctx,
+				plantItem.Basic.Category,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}
-			plantItem.Basic.Blooming, err = translator.Translate(ctx, plantItem.Basic.Blooming, apiKey)
+			plantItem.Basic.Blooming, err = translator.Translate(
+				ctx,
+				plantItem.Basic.Blooming,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}
@@ -106,19 +119,35 @@ func TranslatePlants(pathToDir, apiKey string) error {
 				return err
 			}
 
-			plantItem.Maintenance.Size, err = translator.Translate(ctx, plantItem.Maintenance.Size, apiKey)
+			plantItem.Maintenance.Size, err = translator.Translate(
+				ctx,
+				plantItem.Maintenance.Size,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}
-			plantItem.Maintenance.Soil, err = translator.Translate(ctx, plantItem.Maintenance.Soil, apiKey)
+			plantItem.Maintenance.Soil, err = translator.Translate(
+				ctx,
+				plantItem.Maintenance.Soil,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}
-			plantItem.Maintenance.Sunlight, err = translator.Translate(ctx, plantItem.Maintenance.Sunlight, apiKey)
+			plantItem.Maintenance.Sunlight, err = translator.Translate(
+				ctx,
+				plantItem.Maintenance.Sunlight,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}
-			plantItem.Maintenance.Watering, err = translator.Translate(ctx, plantItem.Maintenance.Watering, apiKey)
+			plantItem.Maintenance.Watering, err = translator.Translate(
+				ctx,
+				plantItem.Maintenance.Watering,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}
@@ -130,7 +159,11 @@ func TranslatePlants(pathToDir, apiKey string) error {
 			if err != nil {
 				return err
 			}
-			plantItem.Maintenance.Pruning, err = translator.Translate(ctx, plantItem.Maintenance.Pruning, apiKey)
+			plantItem.Maintenance.Pruning, err = translator.Translate(
+				ctx,
+				plantItem.Maintenance.Pruning,
+				apiKey,
+			)
 			if err != nil {
 				return err
 			}

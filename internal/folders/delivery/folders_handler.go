@@ -9,7 +9,6 @@ import (
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
 	httpModels "github.com/cyber_bed/internal/models/http"
-	"github.com/cyber_bed/internal/utils/converter"
 )
 
 type FoldersHandler struct {
@@ -118,22 +117,20 @@ func (h FoldersHandler) AddPlantToFolder(c echo.Context) error {
 	}
 
 	duration := c.QueryParam("wateringTime")
-	_, err = converter.StringToTime(duration)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
 
 	if err := h.foldersUsecase.AddPlantToFolder(folderID, plantID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	if _, err = h.notificationsUsecase.CreateNotification(httpModels.Notification{
-		UserID:         userID,
-		PlantID:        plantID,
-		FolderID:       folderID,
-		ExpirationTime: duration,
-	}); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	if len(duration) > 0 {
+		if _, err = h.notificationsUsecase.CreateNotification(httpModels.Notification{
+			UserID:         userID,
+			PlantID:        plantID,
+			FolderID:       folderID,
+			ExpirationTime: duration,
+		}); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
@@ -153,4 +150,38 @@ func (h FoldersHandler) DeletePlantFromFolder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
+}
+
+func (h FoldersHandler) UpdatePeriod(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	folderID, err := strconv.ParseUint(c.Param("folderID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	duration := c.QueryParam("wateringTime")
+	nf, err := h.notificationsUsecase.UpdatePeriodNotification(httpModels.Notification{
+		UserID:         userID,
+		FolderID:       folderID,
+		PlantID:        plantID,
+		ExpirationTime: duration,
+	})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, nf)
 }

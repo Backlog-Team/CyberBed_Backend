@@ -131,8 +131,6 @@ func XiaomiPlantGormToHttp(plant gormModels.XiaomiPlant) XiaomiPlant {
 			MaxSoilEc:    plant.Parameter.MaxSoilEc,
 			MinSoilEc:    plant.Parameter.MinSoilEc,
 		},
-		IsLiked: plant.IsLiked,
-		IsSaved: plant.IsSaved,
 	}
 	return res
 }

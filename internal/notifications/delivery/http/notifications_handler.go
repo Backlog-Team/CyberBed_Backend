@@ -28,24 +28,6 @@ func NewNotificationsHandler(
 	}
 }
 
-func (h NotificationsHandler) UpdatePeriod(c echo.Context) error {
-	notificationID, err := strconv.ParseUint(c.Param("notificationID"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-
-	period := c.QueryParam("period")
-	notification, err := h.notificaionsUsecase.GetNotificationByID(notificationID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
-	}
-	notification.ExpirationTime = period
-
-	h.notificaionsUsecase.UpdatePeriodNotification(notification)
-
-	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
-}
-
 func (h NotificationsHandler) GetNotifications(c echo.Context) error {
 	cookie, err := httpAuth.GetCookie(c)
 	if err != nil {

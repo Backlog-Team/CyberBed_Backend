@@ -2,6 +2,7 @@ package notificationsUsecase
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -24,7 +25,7 @@ func NewNotificationsUsecase(r domain.NotificationsRepository) domain.Notificati
 func (u NotificationsUsecase) CreateNotification(
 	notification httpModels.Notification,
 ) (httpModels.Notification, error) {
-	futureTime, err := converter.StringToTime(notification.ExpirationTime)
+	futureTime, err := converter.StringToTime(time.Now(), notification.ExpirationTime)
 	if err != nil {
 		return httpModels.Notification{}, err
 	}
@@ -33,6 +34,7 @@ func (u NotificationsUsecase) CreateNotification(
 		UserID:         notification.UserID,
 		PlantID:        notification.PlantID,
 		FolderID:       notification.FolderID,
+		TimeStart:      time.Now(),
 		ExpirationTime: futureTime,
 		Period:         notification.ExpirationTime,
 		Status:         gormModels.NotificationStatusWaiting,
@@ -106,6 +108,34 @@ func (u NotificationsUsecase) DeleteNotificationByIDAndStatus(
 	return u.notificationsRepository.DeleteNotificationByIDAndStatus(id, status)
 }
 
-func (u NotificationsUsecase) UpdatePeriodNotification(notification httpModels.Notification) error {
-	return u.notificationsRepository.UpdatePeriodNotification(gormModels.Notification{})
+func (u NotificationsUsecase) UpdatePeriodNotification(
+	notification httpModels.Notification,
+) (httpModels.Notification, error) {
+	nf, err := u.notificationsRepository.GetWaitingNotification(
+		notification.UserID,
+		notification.FolderID,
+		notification.PlantID,
+	)
+	if err != nil {
+		return httpModels.Notification{}, err
+	}
+
+	newTargetTime, err := converter.StringToTime(nf.TimeStart, notification.ExpirationTime)
+	if err != nil {
+		return httpModels.Notification{}, err
+	}
+
+	updNt, err := u.notificationsRepository.UpdatePeriodNotification(gormModels.Notification{
+		UserID:         notification.UserID,
+		PlantID:        notification.PlantID,
+		FolderID:       notification.FolderID,
+		TimeStart:      time.Now(),
+		ExpirationTime: newTargetTime,
+		Period:         notification.ExpirationTime,
+	})
+	if err != nil {
+		return httpModels.Notification{}, err
+	}
+
+	return httpModels.NotificationGormToHttp(updNt), err
 }

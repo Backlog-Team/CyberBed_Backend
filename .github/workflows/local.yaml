@@ -87,7 +87,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: "containers/docker-compose.yaml, configs/, migrations/"
+          source: "containers/docker-compose.yaml, configs/"
           target: "backend"
           rm: true
       - name: executing remote ssh commands using ssh key
@@ -97,8 +97,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            
-            
+
+
             docker exec -i postgresql /bin/bash -c "pg_dump --username postgres cyber_garden" > ~/backup/dump.sql
             docker rm -f $(docker ps -aq)
 

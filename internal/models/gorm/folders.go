@@ -33,3 +33,8 @@ func (pf *PlantFolderRelation) AfterSave(tx *gorm.DB) (err error) {
 		UpdateColumn("plants_num", gorm.Expr("?", uint64(len(pf.PlantsID))))
 	return
 }
+
+func (f *Folder) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Where("folder_id = ?", f.ID).Delete(&Notification{})
+	return
+}

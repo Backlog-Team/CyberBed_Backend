@@ -2,10 +2,11 @@ package translator
 
 import (
 	"context"
-	"github.com/carlmjohnson/requests"
-	"github.com/pkg/errors"
 	"net/http"
 	"strings"
+
+	"github.com/carlmjohnson/requests"
+	"github.com/pkg/errors"
 )
 
 const URL = "https://translate.api.cloud.yandex.net/translate/v2/translate"

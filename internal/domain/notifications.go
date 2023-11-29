@@ -22,5 +22,5 @@ type NotificationsUsecase interface {
 		id uint64,
 		status gormModels.NotificationStatus,
 	) error
-	UpdatePeriodNotification(notification httpModels.Notification) error
+	UpdatePeriodNotification(notification httpModels.Notification) (httpModels.Notification, error)
 }

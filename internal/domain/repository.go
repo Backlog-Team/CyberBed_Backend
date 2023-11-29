@@ -60,6 +60,14 @@ type NotificationsRepository interface {
 		status gormModels.NotificationStatus,
 	) ([]gormModels.Notification, error)
 	GetNotificationByID(id uint64) (gormModels.Notification, error)
+	GetNotificationsByUserFolderPlantID(
+		userID uint64,
+		folderID uint64,
+		plantID uint64,
+	) (gormModels.Notification, error)
+	GetWaitingNotification(
+		userID, folderID, plantID uint64,
+	) (gormModels.Notification, error)
 	UpdateNotificationStatus(
 		id uint64,
 		status gormModels.NotificationStatus,
@@ -69,5 +77,5 @@ type NotificationsRepository interface {
 		id uint64,
 		status gormModels.NotificationStatus,
 	) error
-	UpdatePeriodNotification(notification gormModels.Notification) error
+	UpdatePeriodNotification(notification gormModels.Notification) (gormModels.Notification, error)
 }

@@ -56,9 +56,7 @@ type XiaomiPlant struct {
 	DisplayPid  string                 `json:"display_pid" gorm:"index"`
 	Maintenance XiaomiPlantMaintenance `json:"maintenance" gorm:"foreignkey:XiaomiPlantID;association_foreignkey:ID"`
 	Parameter   XiaomiPlantPrameter    `json:"parameter"   gorm:"foreignkey:XiaomiPlantID;association_foreignkey:ID"`
-	IsLiked     bool
-	IsSaved     bool
-	Image       string `json:"image"`
+	Image       string                 `json:"image"`
 }
 
 type XiaomiPlantBasic struct {

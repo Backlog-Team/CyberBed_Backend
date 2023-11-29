@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func StringToTime(timeStr string) (time.Time, error) {
+func StringToTime(startTime time.Time, timeStr string) (time.Time, error) {
 	parts := strings.Split(timeStr, "_")
 	if len(parts) != 2 {
 		return time.Time{}, errors.New("invalid input format")
@@ -34,6 +34,6 @@ func StringToTime(timeStr string) (time.Time, error) {
 		return time.Time{}, errors.New("invalid unit")
 	}
 
-	futureTime := time.Now().Add(time.Duration(duration) * durationTime)
+	futureTime := startTime.Add(time.Duration(duration) * durationTime)
 	return futureTime, nil
 }
