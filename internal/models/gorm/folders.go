@@ -12,6 +12,14 @@ type Folder struct {
 	FolderName     string
 	PlantsNum      uint64
 	PlantsRelation PlantFolderRelation
+	Channel        Channel
+}
+
+type Channel struct {
+	gorm.Model
+	FolderID  uint64
+	PlantID   uint64
+	ChannelID uint64
 }
 
 type PlantFolderRelation struct {

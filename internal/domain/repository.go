@@ -50,6 +50,9 @@ type FoldersRepository interface {
 	AddPlantToFolder(folderID, plantID uint64) error
 	UpdateFolderPlant(folderID, plantID uint64) error
 	GetFolderByPlantAndUserID(userID, plantID uint64) ([]gormModels.Folder, error)
+
+	CreateChannel(folderID, plantID, channelID uint64) (uint64, error)
+	GetChannelByFolderPlantID(folderID, plantID uint64) (uint64, error)
 }
 
 type NotificationsRepository interface {

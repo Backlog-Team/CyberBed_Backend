@@ -3,6 +3,7 @@ package foldersUsecase
 import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"slices"
 
 	"github.com/cyber_bed/internal/domain"
 	httpModels "github.com/cyber_bed/internal/models/http"
@@ -139,4 +140,26 @@ func (f FoldersUsecase) GetFolderByPlantAndUserID(
 	}
 
 	return resMap, nil
+}
+
+func (f FoldersUsecase) CreateChannel(folderID, plantID, channelID uint64) (uint64, error) {
+	_, err := f.foldersRepository.GetFolder(folderID)
+	if err != nil {
+		return 0, err
+	}
+
+	plants, err := f.foldersRepository.GetPlantsID(folderID)
+	if err != nil {
+		return 0, err
+	}
+	if !slices.Contains(plants, plantID) {
+		return 0, errors.New("plant not found")
+	}
+
+	id, err := f.foldersRepository.CreateChannel(folderID, plantID, channelID)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }

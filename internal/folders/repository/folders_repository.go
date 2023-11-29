@@ -170,3 +170,25 @@ func (db *Postgres) GetFolderByPlantAndUserID(userID, plantID uint64) ([]gormMod
 	}
 	return folderRow, nil
 }
+
+func (db *Postgres) CreateChannel(folderID, plantID, channelID uint64) (uint64, error) {
+	var chanRow gormModels.Channel
+	if err := db.DB.Create(&gormModels.Channel{
+		FolderID:  folderID,
+		PlantID:   plantID,
+		ChannelID: channelID,
+	}).Scan(&chanRow).Error; err != nil {
+		return 0, err
+	}
+	return uint64(chanRow.ID), nil
+}
+
+func (db *Postgres) GetChannelByFolderPlantID(folderID, plantID uint64) (uint64, error) {
+	var chanRow gormModels.Channel
+	if err := db.DB.Model(&gormModels.Channel{}).
+		Where("folder_id = ? AND plant_id = ?", folderID, plantID).
+		First(&chanRow).Error; err != nil {
+		return 0, err
+	}
+	return chanRow.ChannelID, nil
+}

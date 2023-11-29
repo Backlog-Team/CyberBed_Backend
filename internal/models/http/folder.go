@@ -7,6 +7,7 @@ type Folder struct {
 	UserID     uint64 `json:"userID"`
 	FolderName string `json:"folderName"`
 	PlantsNum  uint64 `json:"plantsNum"`
+	ChannelID  uint64 `json:"channelID"`
 }
 
 func FolderGormToHttp(f gormModels.Folder) Folder {
