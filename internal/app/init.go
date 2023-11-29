@@ -199,6 +199,9 @@ func (s *Server) MakeRouter() {
 	folders.DELETE("/:folderID/plants/:plantID", s.foldersHandler.DeletePlantFromFolder)
 	folders.PUT("/:folderID/plants/:plantID", s.foldersHandler.UpdatePeriod)
 
+	folders.POST("/:folderID/plants/:plantID/chan/:channelID", s.foldersHandler.CreateChannel)
+	folders.GET("/:folderID/plants/:plantID/chan", s.foldersHandler.GetChannel)
+
 	customPlants := v1.Group("/custom", s.authMiddleware.LoginRequired)
 	customPlants.POST("/plants", s.plantsHandler.CreateCustomPlant)
 	customPlants.PUT("/plants/:plantID", s.plantsHandler.UpdateCustomPlant)

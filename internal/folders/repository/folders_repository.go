@@ -23,6 +23,8 @@ func NewPostgres(url string) (*Postgres, error) {
 	db.AutoMigrate(
 		&gormModels.Folder{},
 		&gormModels.PlantFolderRelation{},
+
+		&gormModels.Channel{},
 	)
 
 	return &Postgres{
