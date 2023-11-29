@@ -185,3 +185,31 @@ func (h FoldersHandler) UpdatePeriod(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, nf)
 }
+
+func (h FoldersHandler) CreateChannel(c echo.Context) error {
+	folderID, err := strconv.ParseUint(c.Param("folderID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	channelID, err := strconv.ParseUint(c.Param("channelID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	id, err := h.foldersUsecase.CreateChannel(folderID, plantID, channelID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.ID{ID: id})
+}
+
+func (h FoldersHandler) GetChannel(c echo.Context) error {
+	return nil
+}
