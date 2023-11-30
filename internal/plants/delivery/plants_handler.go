@@ -61,13 +61,11 @@ func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
 
 	httpPlant := httpModels.XiaomiPlantGormToHttp(plant)
 	// Check if plant is liked
-	likedPlants, err := h.plantsUsecase.GetPlants(userID)
+	isLiked, err := h.plantsUsecase.GetLikedFieldOfPlant(httpPlant, userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
-	if _, exists := likedPlants[httpPlant.ID]; exists {
-		httpPlant.IsLiked = true
-	}
+	httpPlant.IsLiked = isLiked
 
 	// Check if plant was saved
 	foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)

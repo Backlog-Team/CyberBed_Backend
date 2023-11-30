@@ -24,4 +24,6 @@ type PlantsUsecase interface {
 	CreateSavedPlant(userID, plantID uint64) error
 	GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, error)
 	DeleteSavedPlant(userID, plantID uint64) error
+
+	GetLikedFieldOfPlant(plant httpModels.XiaomiPlant, userID uint64) (bool, error)
 }

@@ -291,3 +291,17 @@ func (u PlantsUsecase) GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, 
 func (u PlantsUsecase) DeleteSavedPlant(userID, plantID uint64) error {
 	return u.plantsRepository.DeleteSavedPlant(userID, plantID)
 }
+
+func (u PlantsUsecase) GetLikedFieldOfPlant(
+	plant httpModels.XiaomiPlant,
+	userID uint64,
+) (bool, error) {
+	likedPlants, err := u.GetPlants(userID)
+	if err != nil {
+		return false, err
+	}
+	if _, exists := likedPlants[plant.ID]; exists {
+		return true, nil
+	}
+	return false, nil
+}
