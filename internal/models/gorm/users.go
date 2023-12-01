@@ -9,11 +9,12 @@ type User struct {
 	Password string `json:"password"`
 }
 
-// Creating default folders after creating user
+// Creating default folder after creating user
 func (u *User) AfterCreate(tx *gorm.DB) (err error) {
-  tx.Create(&DefaultFolder{
-    UserID: u.ID,
-    FolderName: DefaultFolderName,
-  })
-  return
+	tx.Create(&Folder{
+		UserID:     u.ID,
+		FolderName: DefaultFolderName,
+		IsDefalut:  true,
+	})
+	return
 }

@@ -38,7 +38,7 @@ func (db *Postgres) CreateFolder(folder httpModels.Folder) (uint64, error) {
 		Create(&gormModels.Folder{
 			FolderName: folder.FolderName,
 			UserID:     folder.UserID,
-      IsDefalut:  false,     
+			IsDefalut:  false,
 		}).
 		Scan(&res).
 		Error; err != nil {
@@ -69,10 +69,13 @@ func (db *Postgres) GetFolder(id uint64) (gormModels.Folder, error) {
 	return folderRow, nil
 }
 
-func (db *Postgres) GetFolderByName(folderName string) (gormModels.Folder, error) {
+func (db *Postgres) GetFolderByNameAndUserID(
+	folderName string,
+	userID uint64,
+) (gormModels.Folder, error) {
 	var folderRow gormModels.Folder
 	if err := db.DB.Model(&gormModels.Folder{}).
-		Where("folder_name = ?", folderName).
+		Where("folder_name = ? AND user_id = ?", folderName, userID).
 		First(&folderRow).
 		Error; err != nil {
 		return gormModels.Folder{}, err
@@ -82,7 +85,7 @@ func (db *Postgres) GetFolderByName(folderName string) (gormModels.Folder, error
 
 func (db *Postgres) DeleteFolder(id uint64) error {
 	if err := db.DB.Select("Folder").
-    Where("id = ? AND is_delfault = false", id).
+		Where("id = ? AND is_delfault = false", id).
 		Delete(&gormModels.Folder{}).
 		Error; err != nil {
 		return err

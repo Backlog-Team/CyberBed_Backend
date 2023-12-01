@@ -15,7 +15,7 @@ import (
 type FoldersHandler struct {
 	foldersUsecase       domain.FoldersUsecase
 	usersUsecase         domain.UsersUsecase
-  plantsUsecase domain.PlantsUsecase
+	plantsUsecase        domain.PlantsUsecase
 	notificationsUsecase domain.NotificationsUsecase
 }
 
@@ -23,13 +23,13 @@ func NewFoldersHandler(
 	f domain.FoldersUsecase,
 	a domain.UsersUsecase,
 	n domain.NotificationsUsecase,
-  p domain.PlantsUsecase,
+	p domain.PlantsUsecase,
 ) FoldersHandler {
 	return FoldersHandler{
 		foldersUsecase:       f,
 		usersUsecase:         a,
 		notificationsUsecase: n,
-    plantsUsecase: p,
+		plantsUsecase:        p,
 	}
 }
 
@@ -109,37 +109,36 @@ func (h FoldersHandler) GetPlantsFromFolder(c echo.Context) error {
 	}
 
 	// Check each plant if it was liked
-  for i, v := range plants {
-    plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
-    if err != nil {
-      return echo.NewHTTPError(http.StatusNotFound, err)
-    }
-  }
-
-
-		// Check if plant was saved
-		foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+	for i, v := range plants {
+		plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)
 		}
-		for i, p := range plants {
-			for _, f := range foldersToCheck {
-				pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
-				if err != nil {
-					return err
-				}
+	}
 
-				var fids []uint64
-				for _, v := range pl {
-					fids = append(fids, v.ID)
-				}
+	// Check if plant was saved
+	foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+	for i, p := range plants {
+		for _, f := range foldersToCheck {
+			pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
+			if err != nil {
+				return err
+			}
 
-				if slices.Contains(fids, p.ID) {
-					plants[i].IsSaved = true
-					plants[i].FolderSaved = append(plants[i].FolderSaved, f)
-				}
+			var fids []uint64
+			for _, v := range pl {
+				fids = append(fids, v.ID)
+			}
+
+			if slices.Contains(fids, p.ID) {
+				plants[i].IsSaved = true
+				plants[i].FolderSaved = append(plants[i].FolderSaved, f)
 			}
 		}
+	}
 	return c.JSON(http.StatusOK, plants)
 }
 

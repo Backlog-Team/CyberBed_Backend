@@ -139,12 +139,12 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 		// 		plants[i].IsLiked = true
 		// 	}
 		// }
-    for i, v := range plants {
-      plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
-      if err != nil {
-        return echo.NewHTTPError(http.StatusNotFound, err)
-      }
-    }
+		for i, v := range plants {
+			plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusNotFound, err)
+			}
+		}
 
 		// Check if plant was saved
 		foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
@@ -183,12 +183,12 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 	}
 
 	// Check each plant if it was liked
-  for i, v := range plants {
-    plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
-    if err != nil {
-      return echo.NewHTTPError(http.StatusNotFound, err)
-    }
-  }
+	for i, v := range plants {
+		plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusNotFound, err)
+		}
+	}
 
 	// Check if plant was saved
 	foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
@@ -272,12 +272,12 @@ func (h PlantsHandler) GetPlant(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
-  httpPlant := httpModels.XiaomiPlantGormToHttp(xiaomiPlant)
+	httpPlant := httpModels.XiaomiPlantGormToHttp(xiaomiPlant)
 
-  httpPlant.IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(httpPlant, userID)
-  if err != nil {
-    return echo.NewHTTPError(http.StatusNotFound, err)
-  }
+	httpPlant.IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(httpPlant, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
 
 	return c.JSON(http.StatusOK, httpPlant)
 }
@@ -305,45 +305,36 @@ func (h PlantsHandler) GetPlants(c echo.Context) error {
 	}
 
 	// Check each plant if it was liked
-  for i, v := range resPlants {
-    resPlants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
-    if err != nil {
-      return echo.NewHTTPError(http.StatusNotFound, err)
-    }
-  }
-	// toCheckLiked, err := h.plantsUsecase.GetPlants(userID)
-	// if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-	// 	return echo.NewHTTPError(http.StatusNotFound, err)
-	// }
-	// for _, v := range plants {
-	// if _, exists := plants[v.ID]; exists {
-	// 	plants[v.ID].IsLiked = true
-	// }
-	// }
-
-	// Check if plant was saved
-		foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+	for i, v := range resPlants {
+		resPlants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)
 		}
-		for i, p := range plants {
-			for _, f := range foldersToCheck {
-				pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
-				if err != nil {
-					return err
-				}
+	}
 
-				var fids []uint64
-				for _, v := range pl {
-					fids = append(fids, v.ID)
-				}
+	// Check if plant was saved
+	foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+	for i, p := range resPlants {
+		for _, f := range foldersToCheck {
+			pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
+			if err != nil {
+				return err
+			}
 
-				if slices.Contains(fids, p.ID) {
-					resPlants[i].IsSaved = true
-					resPlants[i].FolderSaved = append(plants[i].FolderSaved, f)
-				}
+			var fids []uint64
+			for _, v := range pl {
+				fids = append(fids, v.ID)
+			}
+
+			if slices.Contains(fids, p.ID) {
+				resPlants[i].IsSaved = true
+				resPlants[i].FolderSaved = append(p.FolderSaved, f)
 			}
 		}
+	}
 
 	return c.JSON(http.StatusOK, resPlants)
 }

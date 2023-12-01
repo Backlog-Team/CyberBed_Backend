@@ -107,6 +107,7 @@ func (s *Server) MakeHandlers() {
 		s.foldersUsecase,
 		s.usersUsecase,
 		s.notificationsUsecase,
+		s.plantsUsecase,
 	)
 	s.notificationsHandler = httpNotifications.NewNotificationsHandler(
 		s.notificationsUsecase,

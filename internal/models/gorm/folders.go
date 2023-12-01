@@ -6,7 +6,7 @@ import (
 )
 
 const (
-  DefaultFolderName = "Моя папка"
+	DefaultFolderName = "Моя папка"
 )
 
 type Folder struct {
@@ -17,7 +17,7 @@ type Folder struct {
 	PlantsNum      uint64
 	PlantsRelation PlantFolderRelation
 	Channel        Channel
-  IsDefalut      bool
+	IsDefalut      bool
 }
 
 type Channel struct {

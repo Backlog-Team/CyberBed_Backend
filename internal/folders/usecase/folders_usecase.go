@@ -25,7 +25,7 @@ func NewFoldersUsecase(
 }
 
 func (f FoldersUsecase) CreateFolder(folder httpModels.Folder) (uint64, error) {
-	_, err := f.foldersRepository.GetFolderByName(folder.FolderName)
+	_, err := f.foldersRepository.GetFolderByNameAndUserID(folder.FolderName, folder.UserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			folderID, err := f.foldersRepository.CreateFolder(folder)
@@ -114,6 +114,18 @@ func (f FoldersUsecase) AddPlantToFolder(folderID, plantID uint64) error {
 			return err
 		}
 	}
+	ids, err := f.foldersRepository.GetPlantsID(folderID)
+	if err != nil {
+		return err
+	}
+	if slices.Contains(ids, plantID) {
+		return errors.Wrapf(
+			httpModels.ErrRecordExists,
+			"plan with id {%d} already exists in folder with id {%d}",
+			folderID,
+			plantID,
+		)
+	}
 	return f.foldersRepository.AddPlantToFolder(folderID, plantID)
 }
 
@@ -185,5 +197,3 @@ func (f FoldersUsecase) GetChannelByFolderPlantID(folderID, plantID uint64) (uin
 
 	return id, nil
 }
-
-func (f FoldersUsecase) GetDefaultFolderByUserID(userID uint64) ()
