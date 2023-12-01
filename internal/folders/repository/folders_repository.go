@@ -85,7 +85,7 @@ func (db *Postgres) GetFolderByNameAndUserID(
 
 func (db *Postgres) DeleteFolder(id uint64) error {
 	if err := db.DB.Select("Folder").
-		Where("id = ? AND is_delfault = false", id).
+		Where("id = ? AND is_default = false", id).
 		Delete(&gormModels.Folder{}).
 		Error; err != nil {
 		return err
