@@ -5,6 +5,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+  DefaultFolderName = "Моя папка"
+)
+
 type Folder struct {
 	gorm.Model
 	ID             uint64 `gorm:"primaryKey"`
@@ -13,6 +17,7 @@ type Folder struct {
 	PlantsNum      uint64
 	PlantsRelation PlantFolderRelation
 	Channel        Channel
+  IsDefalut      bool
 }
 
 type Channel struct {

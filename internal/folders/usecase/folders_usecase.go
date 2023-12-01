@@ -185,3 +185,5 @@ func (f FoldersUsecase) GetChannelByFolderPlantID(folderID, plantID uint64) (uin
 
 	return id, nil
 }
+
+func (f FoldersUsecase) GetDefaultFolderByUserID(userID uint64) ()

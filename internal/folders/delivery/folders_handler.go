@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/exp/slices"
 
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
@@ -14,6 +15,7 @@ import (
 type FoldersHandler struct {
 	foldersUsecase       domain.FoldersUsecase
 	usersUsecase         domain.UsersUsecase
+  plantsUsecase domain.PlantsUsecase
 	notificationsUsecase domain.NotificationsUsecase
 }
 
@@ -21,11 +23,13 @@ func NewFoldersHandler(
 	f domain.FoldersUsecase,
 	a domain.UsersUsecase,
 	n domain.NotificationsUsecase,
+  p domain.PlantsUsecase,
 ) FoldersHandler {
 	return FoldersHandler{
 		foldersUsecase:       f,
 		usersUsecase:         a,
 		notificationsUsecase: n,
+    plantsUsecase: p,
 	}
 }
 
@@ -84,6 +88,16 @@ func (h FoldersHandler) DeleteFolder(c echo.Context) error {
 }
 
 func (h FoldersHandler) GetPlantsFromFolder(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
 	folderID, err := strconv.ParseUint(c.Param("folderID"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
@@ -93,6 +107,39 @@ func (h FoldersHandler) GetPlantsFromFolder(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+
+	// Check each plant if it was liked
+  for i, v := range plants {
+    plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
+    if err != nil {
+      return echo.NewHTTPError(http.StatusNotFound, err)
+    }
+  }
+
+
+		// Check if plant was saved
+		foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusNotFound, err)
+		}
+		for i, p := range plants {
+			for _, f := range foldersToCheck {
+				pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
+				if err != nil {
+					return err
+				}
+
+				var fids []uint64
+				for _, v := range pl {
+					fids = append(fids, v.ID)
+				}
+
+				if slices.Contains(fids, p.ID) {
+					plants[i].IsSaved = true
+					plants[i].FolderSaved = append(plants[i].FolderSaved, f)
+				}
+			}
+		}
 	return c.JSON(http.StatusOK, plants)
 }
 
