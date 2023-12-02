@@ -12,9 +12,10 @@ type User struct {
 // Creating default folder after creating user
 func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 	tx.Create(&Folder{
-		UserID:     u.ID,
-		FolderName: DefaultFolderName,
-		IsDefalut:  true,
+		UserID:         u.ID,
+		FolderName:     DefaultFolderName,
+		IsDefalut:      true,
+		PlantsRelation: PlantFolderRelation{},
 	})
 	return
 }

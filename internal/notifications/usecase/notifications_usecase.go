@@ -33,7 +33,6 @@ func (u NotificationsUsecase) CreateNotification(
 	nf, err := u.notificationsRepository.CreateNotification(gormModels.Notification{
 		UserID:         notification.UserID,
 		PlantID:        notification.PlantID,
-		FolderID:       notification.FolderID,
 		TimeStart:      time.Now(),
 		ExpirationTime: futureTime,
 		Period:         notification.ExpirationTime,
@@ -113,7 +112,6 @@ func (u NotificationsUsecase) UpdatePeriodNotification(
 ) (httpModels.Notification, error) {
 	nf, err := u.notificationsRepository.GetWaitingNotification(
 		notification.UserID,
-		notification.FolderID,
 		notification.PlantID,
 	)
 	if err != nil {
@@ -128,7 +126,6 @@ func (u NotificationsUsecase) UpdatePeriodNotification(
 	updNt, err := u.notificationsRepository.UpdatePeriodNotification(gormModels.Notification{
 		UserID:         notification.UserID,
 		PlantID:        notification.PlantID,
-		FolderID:       notification.FolderID,
 		TimeStart:      time.Now(),
 		ExpirationTime: newTargetTime,
 		Period:         notification.ExpirationTime,

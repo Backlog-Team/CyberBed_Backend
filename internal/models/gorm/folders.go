@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	DefaultFolderName = "Моя папка"
+	DefaultFolderName = "Желаемое"
 )
 
 type Folder struct {
@@ -16,15 +16,7 @@ type Folder struct {
 	FolderName     string
 	PlantsNum      uint64
 	PlantsRelation PlantFolderRelation
-	Channel        Channel
 	IsDefalut      bool
-}
-
-type Channel struct {
-	gorm.Model
-	FolderID  uint64
-	PlantID   uint64
-	ChannelID uint64
 }
 
 type PlantFolderRelation struct {
@@ -48,6 +40,7 @@ func (pf *PlantFolderRelation) AfterSave(tx *gorm.DB) (err error) {
 }
 
 func (f *Folder) AfterDelete(tx *gorm.DB) (err error) {
-	tx.Where("folder_id = ?", f.ID).Delete(&Notification{})
+	tx.Where("folder_id = ?", f.PlantsRelation.FolderID).
+		Delete(&PlantFolderRelation{})
 	return
 }

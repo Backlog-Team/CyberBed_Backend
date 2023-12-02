@@ -25,5 +25,14 @@ type PlantsUsecase interface {
 	GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, error)
 	DeleteSavedPlant(userID, plantID uint64) error
 
-	GetLikedFieldOfPlant(plant httpModels.XiaomiPlant, userID uint64) (bool, error)
+	CreateChannel(plantID, channelID, userID uint64) (uint64, error)
+	GetChannelByUserAndPlantID(userID, plantID uint64) (uint64, error)
+	UpdateChannel(userID, plantID, channelID uint64) error
+
+	GetSavedFieldOfPlant(plant httpModels.XiaomiPlant, userID uint64) (bool, error)
+	SetUserPlantFields(plant httpModels.XiaomiPlant, userID uint64) (httpModels.XiaomiPlant, error)
+	SetUserPlantsFields(
+		plants []httpModels.XiaomiPlant,
+		userID uint64,
+	) ([]httpModels.XiaomiPlant, error)
 }

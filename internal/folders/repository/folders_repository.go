@@ -23,8 +23,6 @@ func NewPostgres(url string) (*Postgres, error) {
 	db.AutoMigrate(
 		&gormModels.Folder{},
 		&gormModels.PlantFolderRelation{},
-
-		&gormModels.Channel{},
 	)
 
 	return &Postgres{
@@ -84,13 +82,30 @@ func (db *Postgres) GetFolderByNameAndUserID(
 }
 
 func (db *Postgres) DeleteFolder(id uint64) error {
-	if err := db.DB.Select("Folder").
-		Where("id = ? AND is_default = false", id).
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Select("Folder").
+		Where("id = ? AND is_defalut = false", id).
 		Delete(&gormModels.Folder{}).
 		Error; err != nil {
+		tx.Rollback()
 		return err
 	}
-	return nil
+
+	if err := tx.Select("PlantFolderRelation").
+		Where("folder_id = ?", id).
+		Delete(&gormModels.PlantFolderRelation{}).
+		Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
 }
 
 func (db *Postgres) GetPlantsID(folderID uint64) ([]uint64, error) {
@@ -176,26 +191,4 @@ func (db *Postgres) GetFolderByPlantAndUserID(userID, plantID uint64) ([]gormMod
 		return []gormModels.Folder{}, err
 	}
 	return folderRow, nil
-}
-
-func (db *Postgres) CreateChannel(folderID, plantID, channelID uint64) (uint64, error) {
-	var chanRow gormModels.Channel
-	if err := db.DB.Create(&gormModels.Channel{
-		FolderID:  folderID,
-		PlantID:   plantID,
-		ChannelID: channelID,
-	}).Scan(&chanRow).Error; err != nil {
-		return 0, err
-	}
-	return uint64(chanRow.ID), nil
-}
-
-func (db *Postgres) GetChannelByFolderPlantID(folderID, plantID uint64) (uint64, error) {
-	var chanRow gormModels.Channel
-	if err := db.DB.Model(&gormModels.Channel{}).
-		Where("folder_id = ? AND plant_id = ?", folderID, plantID).
-		First(&chanRow).Error; err != nil {
-		return 0, err
-	}
-	return chanRow.ChannelID, nil
 }

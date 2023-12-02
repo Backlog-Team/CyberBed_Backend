@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"slices"
 
 	httpAuth "github.com/cyber_bed/internal/auth/delivery"
 	"github.com/cyber_bed/internal/domain"
@@ -18,9 +17,10 @@ import (
 )
 
 type PlantsHandler struct {
-	plantsUsecase  domain.PlantsUsecase
-	usersUsecase   domain.UsersUsecase
-	foldersUsecase domain.FoldersUsecase
+	plantsUsecase        domain.PlantsUsecase
+	usersUsecase         domain.UsersUsecase
+	foldersUsecase       domain.FoldersUsecase
+	notificationsUsecase domain.NotificationsUsecase
 }
 
 func NewPlantsHandler(
@@ -28,11 +28,13 @@ func NewPlantsHandler(
 	u domain.UsersUsecase,
 	pl domain.PlantsAPI,
 	f domain.FoldersUsecase,
+	n domain.NotificationsUsecase,
 ) PlantsHandler {
 	return PlantsHandler{
-		plantsUsecase:  p,
-		usersUsecase:   u,
-		foldersUsecase: f,
+		plantsUsecase:        p,
+		usersUsecase:         u,
+		foldersUsecase:       f,
+		notificationsUsecase: n,
 	}
 }
 
@@ -58,36 +60,12 @@ func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
 	}
 
 	httpPlant := httpModels.XiaomiPlantGormToHttp(plant)
-	// Check if plant is liked
-	isLiked, err := h.plantsUsecase.GetLikedFieldOfPlant(httpPlant, userID)
+	res, err := h.plantsUsecase.SetUserPlantFields(httpPlant, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
-	}
-	httpPlant.IsLiked = isLiked
-
-	// Check if plant was saved
-	foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
-	}
-	for _, f := range foldersToCheck {
-		pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
-		if err != nil {
-			return err
-		}
-
-		var fids []uint64
-		for _, v := range pl {
-			fids = append(fids, v.ID)
-		}
-
-		if slices.Contains(fids, plant.ID) {
-			httpPlant.IsSaved = true
-			httpPlant.FolderSaved = append(httpPlant.FolderSaved, f)
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, httpPlant)
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) GetPlantImage(c echo.Context) error {
@@ -129,47 +107,13 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)
 		}
-		// Check each plant if it was liked
-		// toCheckLiked, err := h.plantsUsecase.GetPlants(userID)
-		// if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		// 	return echo.NewHTTPError(http.StatusNotFound, err)
-		// }
-		// for i, v := range plants {
-		// 	if _, exists := toCheckLiked[v.ID]; exists {
-		// 		plants[i].IsLiked = true
-		// 	}
-		// }
-		for i, v := range plants {
-			plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusNotFound, err)
-			}
-		}
 
-		// Check if plant was saved
-		foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+		res, err := h.plantsUsecase.SetUserPlantsFields(plants, userID)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusNotFound, err)
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
-		for i, p := range plants {
-			for _, f := range foldersToCheck {
-				pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
-				if err != nil {
-					return err
-				}
 
-				var fids []uint64
-				for _, v := range pl {
-					fids = append(fids, v.ID)
-				}
-
-				if slices.Contains(fids, p.ID) {
-					plants[i].IsSaved = true
-					plants[i].FolderSaved = append(plants[i].FolderSaved, f)
-				}
-			}
-		}
-		return c.JSON(http.StatusOK, plants)
+		return c.JSON(http.StatusOK, res)
 	}
 
 	pageNum, err := strconv.ParseUint(pageStr, 10, 64)
@@ -182,39 +126,12 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	// Check each plant if it was liked
-	for i, v := range plants {
-		plants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusNotFound, err)
-		}
-	}
-
-	// Check if plant was saved
-	foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+	res, err := h.plantsUsecase.SetUserPlantsFields(plants, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
-	}
-	for i, p := range plants {
-		for _, f := range foldersToCheck {
-			pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
-			if err != nil {
-				return err
-			}
-
-			var fids []uint64
-			for _, v := range pl {
-				fids = append(fids, v.ID)
-			}
-
-			if slices.Contains(fids, p.ID) {
-				plants[i].IsSaved = true
-				plants[i].FolderSaved = append(plants[i].FolderSaved, f)
-			}
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, plants)
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) CreatePlant(c echo.Context) error {
@@ -274,12 +191,12 @@ func (h PlantsHandler) GetPlant(c echo.Context) error {
 	}
 	httpPlant := httpModels.XiaomiPlantGormToHttp(xiaomiPlant)
 
-	httpPlant.IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(httpPlant, userID)
+	res, err := h.plantsUsecase.SetUserPlantFields(httpPlant, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, httpPlant)
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) GetPlants(c echo.Context) error {
@@ -304,39 +221,12 @@ func (h PlantsHandler) GetPlants(c echo.Context) error {
 		resPlants = append(resPlants, v)
 	}
 
-	// Check each plant if it was liked
-	for i, v := range resPlants {
-		resPlants[i].IsLiked, err = h.plantsUsecase.GetLikedFieldOfPlant(v, userID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusNotFound, err)
-		}
-	}
-
-	// Check if plant was saved
-	foldersToCheck, err := h.foldersUsecase.GetFoldersByUserID(userID)
+	res, err := h.plantsUsecase.SetUserPlantsFields(resPlants, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
-	}
-	for i, p := range resPlants {
-		for _, f := range foldersToCheck {
-			pl, err := h.foldersUsecase.GetPlantsFromFolder(f.ID)
-			if err != nil {
-				return err
-			}
-
-			var fids []uint64
-			for _, v := range pl {
-				fids = append(fids, v.ID)
-			}
-
-			if slices.Contains(fids, p.ID) {
-				resPlants[i].IsSaved = true
-				resPlants[i].FolderSaved = append(p.FolderSaved, f)
-			}
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, resPlants)
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) DeletePlant(c echo.Context) error {
@@ -594,8 +484,31 @@ func (h PlantsHandler) CreateSavedPlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
+	duration := c.QueryParam("wateringTime")
+	channel := c.QueryParam("channelID")
+	var channelID uint64
+	if len(channel) > 0 {
+		channelID, err = strconv.ParseUint(channel, 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+	}
+
 	if err := h.plantsUsecase.CreateSavedPlant(userID, plantID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	if _, err := h.plantsUsecase.CreateChannel(plantID, channelID, userID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	if len(duration) > 0 {
+		if _, err = h.notificationsUsecase.CreateNotification(httpModels.Notification{
+			UserID:         userID,
+			PlantID:        plantID,
+			ExpirationTime: duration,
+		}); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
@@ -617,7 +530,48 @@ func (h PlantsHandler) GetSavedPlants(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, plants)
+	res, err := h.plantsUsecase.SetUserPlantsFields(plants, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h PlantsHandler) UpdateSavedPlant(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	var recievedStat httpModels.SavedPlant
+	if err = c.Bind(&recievedStat); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	_, err = h.notificationsUsecase.UpdatePeriodNotification(httpModels.Notification{
+		UserID:         userID,
+		PlantID:        plantID,
+		ExpirationTime: recievedStat.WatringPeriod,
+	})
+
+	h.plantsUsecase.UpdateChannel(userID, plantID, recievedStat.ChannelID)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
 
 func (h PlantsHandler) DeleteSavedPlant(c echo.Context) error {
@@ -641,4 +595,57 @@ func (h PlantsHandler) DeleteSavedPlant(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
+}
+
+func (h PlantsHandler) CreateChannel(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	channelID, err := strconv.ParseUint(c.Param("channelID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	id, err := h.plantsUsecase.CreateChannel(plantID, channelID, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.ID{ID: id})
+}
+
+func (h PlantsHandler) GetChannel(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	id, err := h.plantsUsecase.GetChannelByUserAndPlantID(userID, plantID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.ID{ID: id})
 }

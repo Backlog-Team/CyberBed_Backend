@@ -11,6 +11,4 @@ type FoldersUsecase interface {
 	AddPlantToFolder(folderID, plantID uint64) error
 	DeletePlantFromFolder(folderID, plantID uint64) error
 	GetFolderByPlantAndUserID(plantID, userID uint64) (map[httpModels.Folder]map[uint64]bool, error)
-	CreateChannel(folderID, plantID, channelID uint64) (uint64, error)
-	GetChannelByFolderPlantID(folderID, plantID uint64) (uint64, error)
 }

@@ -57,14 +57,13 @@ func (db *Postgres) GetNotificationsByUserIDAndStatus(
 	return userNotifications, nil
 }
 
-func (db *Postgres) GetNotificationsByUserFolderPlantID(
+func (db *Postgres) GetNotificationsByUserPlantID(
 	userID uint64,
-	folderID uint64,
 	plantID uint64,
 ) (gormModels.Notification, error) {
 	var userNotifications gormModels.Notification
 	if err := db.DB.Model(&gormModels.Notification{}).
-		Where("user_id = ? AND folder_id = ? AND plant_id = ?", userID, folderID, plantID).
+		Where("user_id = ? AND plant_id = ?", userID, plantID).
 		Find(&userNotifications).Error; err != nil {
 		return gormModels.Notification{}, err
 	}
@@ -112,13 +111,12 @@ func (db *Postgres) DeleteNotificationByIDAndStatus(
 }
 
 func (db *Postgres) GetWaitingNotification(
-	userID, folderID, plantID uint64,
+	userID, plantID uint64,
 ) (gormModels.Notification, error) {
 	var resRow gormModels.Notification
 	if err := db.DB.Model(&gormModels.Notification{}).
-		Where("user_id = ? AND folder_id = ? AND plant_id = ? AND status = 'wait'",
+		Where("user_id = ? AND plant_id = ? AND status = 'wait'",
 			userID,
-			folderID,
 			plantID).
 		First(&resRow).Error; err != nil {
 		return gormModels.Notification{}, err
@@ -131,9 +129,8 @@ func (db *Postgres) UpdatePeriodNotification(
 ) (gormModels.Notification, error) {
 	var resRow gormModels.Notification
 	if err := db.DB.Model(&gormModels.Notification{}).
-		Where("user_id = ? AND folder_id = ? AND plant_id = ? AND status = 'wait'",
+		Where("user_id = ? AND plant_id = ? AND status = 'wait'",
 			notification.UserID,
-			notification.FolderID,
 			notification.PlantID).
 		Update("period", notification.Period).
 		Update("expiration_time", notification.ExpirationTime).

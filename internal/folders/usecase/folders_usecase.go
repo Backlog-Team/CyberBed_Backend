@@ -115,7 +115,7 @@ func (f FoldersUsecase) AddPlantToFolder(folderID, plantID uint64) error {
 		}
 	}
 	ids, err := f.foldersRepository.GetPlantsID(folderID)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if slices.Contains(ids, plantID) {
@@ -152,48 +152,4 @@ func (f FoldersUsecase) GetFolderByPlantAndUserID(
 	}
 
 	return resMap, nil
-}
-
-func (f FoldersUsecase) CreateChannel(folderID, plantID, channelID uint64) (uint64, error) {
-	_, err := f.foldersRepository.GetFolder(folderID)
-	if err != nil {
-		return 0, err
-	}
-
-	plants, err := f.foldersRepository.GetPlantsID(folderID)
-	if err != nil {
-		return 0, err
-	}
-	if !slices.Contains(plants, plantID) {
-		return 0, errors.New("plant not found")
-	}
-
-	id, err := f.foldersRepository.CreateChannel(folderID, plantID, channelID)
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
-}
-
-func (f FoldersUsecase) GetChannelByFolderPlantID(folderID, plantID uint64) (uint64, error) {
-	_, err := f.foldersRepository.GetFolder(folderID)
-	if err != nil {
-		return 0, err
-	}
-
-	plants, err := f.foldersRepository.GetPlantsID(folderID)
-	if err != nil {
-		return 0, err
-	}
-	if !slices.Contains(plants, plantID) {
-		return 0, errors.New("plant not found")
-	}
-
-	id, err := f.foldersRepository.GetChannelByFolderPlantID(folderID, plantID)
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
 }

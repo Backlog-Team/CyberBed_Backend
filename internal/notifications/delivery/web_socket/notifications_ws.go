@@ -104,7 +104,6 @@ func (h WebSocket) Handler(w http.ResponseWriter, r *http.Request) {
 					// Schedule new notification and send it too
 					newNotification, err := h.u.CreateNotification(httpModels.Notification{
 						UserID:         n.UserID,
-						FolderID:       n.FolderID,
 						PlantID:        n.PlantID,
 						ExpirationTime: n.Period,
 					})

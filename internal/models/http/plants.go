@@ -26,8 +26,10 @@ type CustomPlant struct {
 }
 
 type SavedPlant struct {
-	UserID  uint64
-	PlantID uint64
+	UserID        uint64 `json:"userID"`
+	PlantID       uint64 `json:"plantID"`
+	WatringPeriod string `json:"period"`
+	ChannelID     uint64 `json:"channelID"`
 }
 
 type XiaomiPlant struct {
@@ -64,9 +66,11 @@ type XiaomiPlant struct {
 		MaxSoilEc    uint64 `             json:"max_soil_ec"`
 		MinSoilEc    uint64 `             json:"min_soil_ec"`
 	} `json:"parameter"`
-	IsLiked     bool     `json:"isLiked"`
-	IsSaved     bool     `json:"isSaved"`
-	FolderSaved []Folder `json:"folderSaved"`
+	IsLiked        bool     `json:"isLiked"`
+	IsSaved        bool     `json:"isSaved"`
+	FolderSaved    []Folder `json:"folderSaved"`
+	WateringPeriod string
+	ChannelID      uint64
 }
 
 func XiaomiPlantGormToHttp(plant gormModels.XiaomiPlant) XiaomiPlant {

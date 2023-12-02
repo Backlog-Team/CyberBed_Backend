@@ -36,8 +36,22 @@ type CustomPlant struct {
 
 type SavedPlant struct {
 	gorm.Model
+	ID      uint64
 	UserID  uint64
 	PlantID uint64
+}
+
+func (sp *SavedPlant) BeforeDelete(tx *gorm.DB) (err error) {
+	tx.Where("id = ?", sp.ID).Delete(&Channel{})
+	tx.Where("id = ?", sp.ID).Delete(&Notification{})
+	return
+}
+
+type Channel struct {
+	gorm.Model
+	UserID    uint64
+	PlantID   uint64
+	ChannelID uint64
 }
 
 type PlantStat struct {

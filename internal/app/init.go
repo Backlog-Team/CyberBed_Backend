@@ -102,6 +102,7 @@ func (s *Server) MakeHandlers() {
 		s.usersUsecase,
 		s.plantsAPI,
 		s.foldersUsecase,
+		s.notificationsUsecase,
 	)
 	s.foldersHandler = foldersHandler.NewFoldersHandler(
 		s.foldersUsecase,
@@ -159,7 +160,7 @@ func (s *Server) MakeUsecases() {
 
 	s.authUsecase = authUsecase.NewAuthUsecase(authDB, usersDB, s.Config.CookieSettings)
 	s.usersUsecase = usersUsecase.NewUsersUsecase(usersDB)
-	s.plantsUsecase = plantsUsecase.NewPlansUsecase(plantsDB, s.plantsAPI)
+	s.plantsUsecase = plantsUsecase.NewPlansUsecase(plantsDB, foldersDB, notificationsDB)
 	s.foldersUsecase = foldersUsecase.NewFoldersUsecase(foldersDB, plantsDB)
 	s.recUsecase = recUsecase.New(recognitionAPI, s.plantsAPI, s.plantsUsecase)
 	s.notificationsUsecase = notificationsUsecase.NewNotificationsUsecase(notificationsDB)
@@ -187,9 +188,14 @@ func (s *Server) MakeRouter() {
 	plants.POST("/:plantID", s.plantsHandler.CreatePlant)
 	plants.DELETE("/:plantID", s.plantsHandler.DeletePlant)
 	plants.GET("", s.plantsHandler.GetPlants)
+
 	plants.POST("/:plantID/saved", s.plantsHandler.CreateSavedPlant)
 	plants.GET("/saved", s.plantsHandler.GetSavedPlants)
 	plants.DELETE("/:plantID/saved", s.plantsHandler.DeleteSavedPlant)
+	plants.PUT("/:plantID/saved", s.plantsHandler.UpdateSavedPlant)
+
+	plants.POST("/:plantID/chan/:channelID", s.plantsHandler.CreateChannel)
+	plants.GET("/:plantID/chan", s.plantsHandler.GetChannel)
 
 	folders := v1.Group("/folders", s.authMiddleware.LoginRequired)
 	folders.POST("", s.foldersHandler.CreateFolder)
@@ -198,10 +204,6 @@ func (s *Server) MakeRouter() {
 	folders.DELETE("/:folderID", s.foldersHandler.DeleteFolder)
 	folders.POST("/:folderID/plants/:plantID", s.foldersHandler.AddPlantToFolder)
 	folders.DELETE("/:folderID/plants/:plantID", s.foldersHandler.DeletePlantFromFolder)
-	folders.PUT("/:folderID/plants/:plantID", s.foldersHandler.UpdatePeriod)
-
-	folders.POST("/:folderID/plants/:plantID/chan/:channelID", s.foldersHandler.CreateChannel)
-	folders.GET("/:folderID/plants/:plantID/chan", s.foldersHandler.GetChannel)
 
 	customPlants := v1.Group("/custom", s.authMiddleware.LoginRequired)
 	customPlants.POST("/plants", s.plantsHandler.CreateCustomPlant)
