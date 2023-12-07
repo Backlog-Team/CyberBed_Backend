@@ -12,23 +12,20 @@ import (
 )
 
 type FoldersHandler struct {
-	foldersUsecase       domain.FoldersUsecase
-	usersUsecase         domain.UsersUsecase
-	plantsUsecase        domain.PlantsUsecase
-	notificationsUsecase domain.NotificationsUsecase
+	foldersUsecase domain.FoldersUsecase
+	usersUsecase   domain.UsersUsecase
+	plantsUsecase  domain.PlantsUsecase
 }
 
 func NewFoldersHandler(
 	f domain.FoldersUsecase,
 	a domain.UsersUsecase,
-	n domain.NotificationsUsecase,
 	p domain.PlantsUsecase,
 ) FoldersHandler {
 	return FoldersHandler{
-		foldersUsecase:       f,
-		usersUsecase:         a,
-		notificationsUsecase: n,
-		plantsUsecase:        p,
+		foldersUsecase: f,
+		usersUsecase:   a,
+		plantsUsecase:  p,
 	}
 }
 

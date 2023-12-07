@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS cookies;
 DROP TABLE IF EXISTS custom_plants;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS plant_folder_relations;
+DROP TABLE IF EXISTS channels;
 DROP TABLE IF EXISTS folders;
 DROP TABLE IF EXISTS plant_stats;
 DROP TABLE IF EXISTS saved_plants;

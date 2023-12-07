@@ -97,8 +97,6 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-
-
             docker exec -i postgresql /bin/bash -c "pg_dump --username postgres cyber_garden" > ~/backup/dump.sql
             docker rm -f $(docker ps -aq)
 
