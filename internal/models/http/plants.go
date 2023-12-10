@@ -68,6 +68,7 @@ type XiaomiPlant struct {
 	} `json:"parameter"`
 	IsLiked        bool     `json:"isLiked"`
 	IsSaved        bool     `json:"isSaved"`
+	IsCustom       bool     `json:"isCustom"`
 	FolderSaved    []Folder `json:"folderSaved"`
 	WateringPeriod string
 	ChannelID      uint64

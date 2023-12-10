@@ -303,6 +303,29 @@ func (u PlantsUsecase) GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, 
 			return nil, err
 		}
 		resPlants[len(resPlants)-1].ChannelID = ch
+		resPlants[len(resPlants)-1].IsCustom = false
+	}
+
+	customPlants, err := u.plantsRepository.GetCustomPlants(userID)
+	if err != nil {
+		return []httpModels.XiaomiPlant{}, err
+	}
+	for _, cp := range customPlants {
+		resPlants = append(resPlants, httpModels.XiaomiPlant{
+			ID:      cp.ID,
+			PlantID: cp.PlantName,
+			Basic: struct {
+				FloralLanguage string `             json:"floral_language"`
+				Origin         string `             json:"origin"`
+				Production     string `             json:"production"`
+				Category       string `             json:"category"`
+				Blooming       string `             json:"blooming"`
+				Color          string `             json:"color"`
+			}{
+				FloralLanguage: cp.About,
+			},
+			IsCustom: true,
+		})
 	}
 
 	return resPlants, nil
