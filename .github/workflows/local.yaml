@@ -77,8 +77,9 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/cyberbed-notifications:latest
 
   build_and_push:
-    needs: docker-push-api
-    needs: docker-push-notifications
+    needs:
+      - docker-push-api
+      - docker-push-notifications
     runs-on: ubuntu-latest
 
     steps:
