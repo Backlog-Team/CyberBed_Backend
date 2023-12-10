@@ -155,11 +155,19 @@ func (db *Postgres) AddPlantToFolder(folderID, plantID uint64) error {
 }
 
 func (db *Postgres) UpdateFolderPlant(folderID, plantID uint64) error {
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	folderPlant := gormModels.PlantFolderRelation{}
 	if err := db.DB.Model(&gormModels.PlantFolderRelation{}).
 		Where("folder_id = ? AND plants_id @> ARRAY[?]::integer[]", folderID, plantID).
 		First(&folderPlant).
 		Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -177,9 +185,10 @@ func (db *Postgres) UpdateFolderPlant(folderID, plantID uint64) error {
 		Where("folder_id = ?", folderID).
 		Update("plants_id", &folderPlant.PlantsID).
 		Error; err != nil {
+		tx.Rollback()
 		return err
 	}
-	return nil
+	return tx.Commit().Error
 }
 
 func (db *Postgres) GetFolderByPlantAndUserID(userID, plantID uint64) ([]gormModels.Folder, error) {

@@ -153,3 +153,39 @@ func (f FoldersUsecase) GetFolderByPlantAndUserID(
 
 	return resMap, nil
 }
+
+func (f FoldersUsecase) MovePlantFromFolder(fromID, toID, plantID uint64) error {
+	fromIDs, err := f.foldersRepository.GetPlantsID(fromID)
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(fromIDs, plantID) {
+		return errors.Wrapf(
+			httpModels.ErrNotFound,
+			"plant with id {%d} in folder with id {%d} not found",
+			plantID,
+			fromID,
+		)
+	}
+
+	toIDs, err := f.foldersRepository.GetPlantsID(toID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if slices.Contains(toIDs, plantID) {
+		return errors.Wrapf(
+			httpModels.ErrRecordExists,
+			"plant with id {%d} in folder id {%d} already exists",
+			plantID,
+			toID,
+		)
+	}
+
+	if err = f.foldersRepository.UpdateFolderPlant(fromID, plantID); err != nil {
+		return err
+	}
+	if err = f.foldersRepository.AddPlantToFolder(toID, plantID); err != nil {
+		return err
+	}
+	return nil
+}

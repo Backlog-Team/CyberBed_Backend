@@ -11,4 +11,5 @@ type FoldersUsecase interface {
 	AddPlantToFolder(folderID, plantID uint64) error
 	DeletePlantFromFolder(folderID, plantID uint64) error
 	GetFolderByPlantAndUserID(plantID, userID uint64) (map[httpModels.Folder]map[uint64]bool, error)
+	MovePlantFromFolder(fromID, toID, plantID uint64) error
 }
