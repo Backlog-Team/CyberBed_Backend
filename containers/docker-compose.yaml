@@ -55,4 +55,3 @@ networks:
   server:
     driver: bridge
     name: "server"
-    external: true
