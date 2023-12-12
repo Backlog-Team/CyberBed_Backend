@@ -12,6 +12,7 @@ database:
     path_to_dir: "plant-database/json_rus"
     init: false
 
+env_file: ".env.prod"
 logger_level: "debug"
 
 recognize_api:
