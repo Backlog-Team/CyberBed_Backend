@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 
 	"github.com/cyber_bed/internal/app"
@@ -14,6 +15,10 @@ func main() {
 	var configPath string
 	config.ParseFlag(&configPath)
 	flag.Parse()
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	cfg := config.New()
 	if err := cfg.Open(configPath); err != nil {
