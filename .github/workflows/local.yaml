@@ -107,8 +107,8 @@ jobs:
             export TREFLE_API_TOKEN=${{ secrets.TREFLE_API_TOKEN }}
             export PERENUAL_API_TOKEN=${{ secrets.PERENUAL_API_TOKEN }}
             echo 'RECOGNIZE_API_TOKEN=$RECOGNIZE_API_TOKEN
-TREFLE_API_TOKEN=$TREFLE_API_TOKEN
-PERENUAL_API_TOKEN=$PERENUAL_API_TOKEN' > ~/backend/.env.prod
+                  TREFLE_API_TOKEN=$TREFLE_API_TOKEN
+                  PERENUAL_API_TOKEN=$PERENUAL_API_TOKEN' > ~/backend/.env.prod
 
             cd ~/backend/containers
             mv ../migrations .
