@@ -103,10 +103,9 @@ jobs:
             docker exec -i postgresql /bin/bash -c "pg_dump --username postgres cyber_garden" > ~/backup/dump.sql
             docker rm -f $(docker ps -aq)
 
-            export RECOGNIZE_API_TOKEN=${{ secrets.RECOGNIZE_API_TOKEN }}
-            export TREFLE_API_TOKEN=${{ secrets.TREFLE_API_TOKEN }}
-            export PERENUAL_API_TOKEN=${{ secrets.PERENUAL_API_TOKEN }}
-            echo 'RECOGNIZE_API_TOKEN=$RECOGNIZE_API_TOKEN\nTREFLE_API_TOKEN=$TREFLE_API_TOKEN\nPERENUAL_API_TOKEN=$PERENUAL_API_TOKEN' > ~/backend/.env.prod
+            echo "RECOGNIZE_API_TOKEN=${{ secrets.RECOGNIZE_API_TOKEN }}" > ~/backend/.env.prod
+            echo "TREFLE_API_TOKEN=${{ secrets.TREFLE_API_TOKEN }}" >> ~/backend/.env.prod
+            echo "PERENUAL_API_TOKEN=${{ secrets.PERENUAL_API_TOKEN }}" >> ~/backend/.env.prod
 
             cd ~/backend/containers
             mv ../migrations .
