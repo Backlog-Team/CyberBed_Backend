@@ -18,7 +18,9 @@ import (
 	foldersHandler "github.com/cyber_bed/internal/folders/delivery"
 	foldersRepository "github.com/cyber_bed/internal/folders/repository"
 	foldersUsecase "github.com/cyber_bed/internal/folders/usecase"
-	domainTrefleAPI "github.com/cyber_bed/internal/plants-api"
+	httpNotifications "github.com/cyber_bed/internal/notifications/delivery/http"
+	notificationsRepository "github.com/cyber_bed/internal/notifications/repository"
+	notificationsUsecase "github.com/cyber_bed/internal/notifications/usecase"
 	httpPlants "github.com/cyber_bed/internal/plants/delivery"
 	plantsRepository "github.com/cyber_bed/internal/plants/repository"
 	plantsUsecase "github.com/cyber_bed/internal/plants/usecase"
@@ -37,18 +39,20 @@ type Server struct {
 	Echo   *echo.Echo
 	Config *config.Config
 
-	usersUsecase   domain.UsersUsecase
-	authUsecase    domain.AuthUsecase
-	plantsUsecase  domain.PlantsUsecase
-	recUsecase     domainRecognition.Usecase
-	plantsAPI      domain.PlantsAPI
-	foldersUsecase domain.FoldersUsecase
+	usersUsecase         domain.UsersUsecase
+	authUsecase          domain.AuthUsecase
+	plantsUsecase        domain.PlantsUsecase
+	recUsecase           domainRecognition.Usecase
+	plantsAPI            domain.PlantsAPI
+	foldersUsecase       domain.FoldersUsecase
+	notificationsUsecase domain.NotificationsUsecase
 
-	usersHandler   httpUsers.UsersHandler
-	authHandler    httpAuth.AuthHandler
-	recHandler     domainRecognition.Handler
-	plantsHandler  httpPlants.PlantsHandler
-	foldersHandler foldersHandler.FoldersHandler
+	usersHandler         httpUsers.UsersHandler
+	authHandler          httpAuth.AuthHandler
+	recHandler           domainRecognition.Handler
+	plantsHandler        httpPlants.PlantsHandler
+	foldersHandler       foldersHandler.FoldersHandler
+	notificationsHandler httpNotifications.NotificationsHandler
 
 	authMiddleware *authMiddlewares.Middlewares
 }
@@ -76,7 +80,8 @@ func (s *Server) init() {
 	}
 
 	if s.Config.TranslateMode {
-		if err := migrations.TranslatePlants(s.Config.Database.InitDB.PathToDir); err != nil {
+		s.Echo.Logger.Info("starting translate mode")
+		if err := migrations.TranslatePlants(s.Config.Database.InitDB.PathToDir, ""); err != nil {
 			s.Echo.Logger.Error(err)
 		}
 	}
@@ -92,8 +97,22 @@ func (s *Server) Start() error {
 func (s *Server) MakeHandlers() {
 	s.recHandler = http.NewHandler(s.recUsecase)
 	s.authHandler = httpAuth.NewAuthHandler(s.authUsecase, s.usersUsecase, s.Config.CookieSettings)
-	s.plantsHandler = httpPlants.NewPlantsHandler(s.plantsUsecase, s.usersUsecase, s.plantsAPI)
-	s.foldersHandler = foldersHandler.NewFoldersHandler(s.foldersUsecase, s.usersUsecase)
+	s.plantsHandler = httpPlants.NewPlantsHandler(
+		s.plantsUsecase,
+		s.usersUsecase,
+		s.plantsAPI,
+		s.foldersUsecase,
+		s.notificationsUsecase,
+	)
+	s.foldersHandler = foldersHandler.NewFoldersHandler(
+		s.foldersUsecase,
+		s.usersUsecase,
+		s.plantsUsecase,
+	)
+	s.notificationsHandler = httpNotifications.NewNotificationsHandler(
+		s.notificationsUsecase,
+		s.usersUsecase,
+	)
 }
 
 func (s *Server) MakeUsecases() {
@@ -133,21 +152,17 @@ func (s *Server) MakeUsecases() {
 		s.Config.RecognizeAPI.CountResults,
 	)
 
-	if u, err = url.Parse(s.Config.PerenualAPI.BaseURL); err != nil {
-		s.Echo.Logger.Error(errors.Wrap(err, "failed to parse base url"))
-		return
+	notificationsDB, err := notificationsRepository.NewPostgres(pgParams)
+	if err != nil {
+		s.Echo.Logger.Error(err)
 	}
-
-	s.plantsAPI = domainTrefleAPI.NewPerenualAPI(
-		u,
-		s.Config.PerenualAPI.Token,
-	)
 
 	s.authUsecase = authUsecase.NewAuthUsecase(authDB, usersDB, s.Config.CookieSettings)
 	s.usersUsecase = usersUsecase.NewUsersUsecase(usersDB)
-	s.plantsUsecase = plantsUsecase.NewPlansUsecase(plantsDB, s.plantsAPI)
+	s.plantsUsecase = plantsUsecase.NewPlansUsecase(plantsDB, foldersDB, notificationsDB)
 	s.foldersUsecase = foldersUsecase.NewFoldersUsecase(foldersDB, plantsDB)
 	s.recUsecase = recUsecase.New(recognitionAPI, s.plantsAPI, s.plantsUsecase)
+	s.notificationsUsecase = notificationsUsecase.NewNotificationsUsecase(notificationsDB)
 }
 
 func (s *Server) MakeRouter() {
@@ -172,9 +187,14 @@ func (s *Server) MakeRouter() {
 	plants.POST("/:plantID", s.plantsHandler.CreatePlant)
 	plants.DELETE("/:plantID", s.plantsHandler.DeletePlant)
 	plants.GET("", s.plantsHandler.GetPlants)
+
 	plants.POST("/:plantID/saved", s.plantsHandler.CreateSavedPlant)
 	plants.GET("/saved", s.plantsHandler.GetSavedPlants)
 	plants.DELETE("/:plantID/saved", s.plantsHandler.DeleteSavedPlant)
+	plants.PUT("/:plantID/saved", s.plantsHandler.UpdateSavedPlant)
+
+	plants.POST("/:plantID/chan/:channelID", s.plantsHandler.CreateChannel)
+	plants.GET("/:plantID/chan", s.plantsHandler.GetChannel)
 
 	folders := v1.Group("/folders", s.authMiddleware.LoginRequired)
 	folders.POST("", s.foldersHandler.CreateFolder)
@@ -183,6 +203,11 @@ func (s *Server) MakeRouter() {
 	folders.DELETE("/:folderID", s.foldersHandler.DeleteFolder)
 	folders.POST("/:folderID/plants/:plantID", s.foldersHandler.AddPlantToFolder)
 	folders.DELETE("/:folderID/plants/:plantID", s.foldersHandler.DeletePlantFromFolder)
+	folders.PUT(
+		"/:fromFolderID/:toFolderID/plants/:plantID",
+		s.foldersHandler.MovePlantFromOneFolderToAnother,
+	)
+	folders.POST("/default/plants/:plantID", s.foldersHandler.AddPlantToDefaultFolder)
 
 	customPlants := v1.Group("/custom", s.authMiddleware.LoginRequired)
 	customPlants.POST("/plants", s.plantsHandler.CreateCustomPlant)
@@ -191,6 +216,11 @@ func (s *Server) MakeRouter() {
 	customPlants.GET("/plants/:plantID", s.plantsHandler.GetCustomPlant)
 	customPlants.GET("/plants/:plantID/image", s.plantsHandler.GetCustomPlantImage)
 	customPlants.DELETE("/plants/:plantID", s.plantsHandler.DeleteCustomPlant)
+
+	notifications := v1.Group("/notifications", s.authMiddleware.LoginRequired)
+	notifications.GET("", s.notificationsHandler.GetNotifications)
+	notifications.DELETE("/:notificationID", s.notificationsHandler.DeleteNotification)
+	notifications.DELETE("", s.notificationsHandler.DeleteCategoryNotification)
 }
 
 func (s *Server) makeMiddlewares() {

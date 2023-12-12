@@ -40,6 +40,7 @@ func (u usecase) Recognize(
 	}
 
 	plants := make([]httpModels.XiaomiPlant, 0)
+	curIndex := 0
 	for _, plant := range recognized {
 		found, err := u.plantsUsecase.GetPlantByName(plant.CommonName)
 		if err != nil {
@@ -47,6 +48,10 @@ func (u usecase) Recognize(
 		}
 
 		plants = append(plants, found...)
+		for range found {
+			plants[curIndex].PredictionScore = plant.PredictionScore
+			curIndex += 1
+		}
 	}
 
 	return plants, nil

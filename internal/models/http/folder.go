@@ -7,6 +7,7 @@ type Folder struct {
 	UserID     uint64 `json:"userID"`
 	FolderName string `json:"folderName"`
 	PlantsNum  uint64 `json:"plantsNum"`
+	IsDefault  bool   `json:"is_default"`
 }
 
 func FolderGormToHttp(f gormModels.Folder) Folder {
@@ -15,5 +16,6 @@ func FolderGormToHttp(f gormModels.Folder) Folder {
 		UserID:     f.UserID,
 		FolderName: f.FolderName,
 		PlantsNum:  f.PlantsNum,
+		IsDefault:  f.IsDefalut,
 	}
 }

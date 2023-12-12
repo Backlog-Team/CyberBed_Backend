@@ -36,6 +36,7 @@ func (db *Postgres) CreateFolder(folder httpModels.Folder) (uint64, error) {
 		Create(&gormModels.Folder{
 			FolderName: folder.FolderName,
 			UserID:     folder.UserID,
+			IsDefalut:  false,
 		}).
 		Scan(&res).
 		Error; err != nil {
@@ -66,13 +67,45 @@ func (db *Postgres) GetFolder(id uint64) (gormModels.Folder, error) {
 	return folderRow, nil
 }
 
-func (db *Postgres) DeleteFolder(id uint64) error {
-	if err := db.DB.Select("Folder").
-		Delete(&gormModels.Folder{ID: id}).
+func (db *Postgres) GetFolderByNameAndUserID(
+	folderName string,
+	userID uint64,
+) (gormModels.Folder, error) {
+	var folderRow gormModels.Folder
+	if err := db.DB.Model(&gormModels.Folder{}).
+		Where("folder_name = ? AND user_id = ?", folderName, userID).
+		First(&folderRow).
 		Error; err != nil {
+		return gormModels.Folder{}, err
+	}
+	return folderRow, nil
+}
+
+func (db *Postgres) DeleteFolder(id uint64) error {
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Select("Folder").
+		Where("id = ? AND is_defalut = false", id).
+		Delete(&gormModels.Folder{}).
+		Error; err != nil {
+		tx.Rollback()
 		return err
 	}
-	return nil
+
+	if err := tx.Select("PlantFolderRelation").
+		Where("folder_id = ?", id).
+		Delete(&gormModels.PlantFolderRelation{}).
+		Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
 }
 
 func (db *Postgres) GetPlantsID(folderID uint64) ([]uint64, error) {
@@ -122,11 +155,19 @@ func (db *Postgres) AddPlantToFolder(folderID, plantID uint64) error {
 }
 
 func (db *Postgres) UpdateFolderPlant(folderID, plantID uint64) error {
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	folderPlant := gormModels.PlantFolderRelation{}
 	if err := db.DB.Model(&gormModels.PlantFolderRelation{}).
 		Where("folder_id = ? AND plants_id @> ARRAY[?]::integer[]", folderID, plantID).
 		First(&folderPlant).
 		Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -144,7 +185,19 @@ func (db *Postgres) UpdateFolderPlant(folderID, plantID uint64) error {
 		Where("folder_id = ?", folderID).
 		Update("plants_id", &folderPlant.PlantsID).
 		Error; err != nil {
+		tx.Rollback()
 		return err
 	}
-	return nil
+	return tx.Commit().Error
+}
+
+func (db *Postgres) GetFolderByPlantAndUserID(userID, plantID uint64) ([]gormModels.Folder, error) {
+	var folderRow []gormModels.Folder
+	if err := db.DB.Model(&gormModels.PlantFolderRelation{}).
+		Joins("JOIN folders ON plant_folder_relations.folder_id=folders.id").
+		Where("user_id = ? AND plants_id @> ARRAY[?]::integer[]", userID, plantID).
+		Find(&folderRow).Error; err != nil {
+		return []gormModels.Folder{}, err
+	}
+	return folderRow, nil
 }

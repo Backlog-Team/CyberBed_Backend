@@ -9,11 +9,12 @@ type Plant struct {
 	ID       uint64 `json:"id"`
 	ImageUrl string `json:"imageUrl"`
 
-	CommonName     string   `json:"common_name"`
-	ScientificName []string `json:"scientific_name"`
-	OtherName      []string `json:"other_name"`
-	Cycle          string   `json:"cycle"`
-	Watering       string   `json:"watering"`
+	CommonName      string   `json:"common_name"`
+	ScientificName  []string `json:"scientific_name"`
+	OtherName       []string `json:"other_name"`
+	Cycle           string   `json:"cycle"`
+	Watering        string   `json:"watering"`
+	PredictionScore float64  `json:"prediction"`
 }
 
 type CustomPlant struct {
@@ -26,8 +27,10 @@ type CustomPlant struct {
 }
 
 type SavedPlant struct {
-	UserID  uint64
-	PlantID uint64
+	UserID        uint64 `json:"userID"`
+	PlantID       uint64 `json:"plantID"`
+	WatringPeriod string `json:"period"`
+	ChannelID     uint64 `json:"channelID"`
 }
 
 type XiaomiPlant struct {
@@ -64,10 +67,17 @@ type XiaomiPlant struct {
 		MaxSoilEc    uint64 `             json:"max_soil_ec"`
 		MinSoilEc    uint64 `             json:"min_soil_ec"`
 	} `json:"parameter"`
+	IsLiked         bool     `json:"isLiked"`
+	IsSaved         bool     `json:"isSaved"`
+	IsCustom        bool     `json:"isCustom"`
+	FolderSaved     []Folder `json:"folderSaved"`
+	WateringPeriod  string
+	ChannelID       uint64
+	PredictionScore float64 `json:"prediction"`
 }
 
 func XiaomiPlantGormToHttp(plant gormModels.XiaomiPlant) XiaomiPlant {
-	return XiaomiPlant{
+	res := XiaomiPlant{
 		ID:         plant.ID,
 		PlantID:    plant.PlantID,
 		DisplayPid: plant.DisplayPid,
@@ -129,6 +139,7 @@ func XiaomiPlantGormToHttp(plant gormModels.XiaomiPlant) XiaomiPlant {
 			MinSoilEc:    plant.Parameter.MinSoilEc,
 		},
 	}
+	return res
 }
 
 func CustomPlantGormToHttp(plant gormModels.CustomPlant) CustomPlant {

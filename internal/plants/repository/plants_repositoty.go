@@ -1,8 +1,6 @@
 package plantsRepository
 
 import (
-	"strings"
-
 	"github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -30,6 +28,9 @@ func NewPostgres(url string) (*Postgres, error) {
 
 		&gormModels.CustomPlant{},
 		&gormModels.SavedPlant{},
+		&gormModels.PlantStat{},
+
+		&gormModels.Channel{},
 	)
 
 	return &Postgres{
@@ -61,8 +62,18 @@ func (db *Postgres) AddUserPlantsRelations(userID uint64, plantsID []int64) erro
 			return res.Error
 		}
 	} else {
-		newPlantIDs := userPlant[0].PlantsID
-		newPlantIDs = append(newPlantIDs, plantsID...)
+		plantsMap := make(map[uint64]bool)
+		for _, pid := range userPlant[0].PlantsID {
+			plantsMap[uint64(pid)] = true
+		}
+		for _, pid := range plantsID {
+			plantsMap[uint64(pid)] = true
+		}
+
+		newPlantIDs := make(pq.Int64Array, 0)
+		for key := range plantsMap {
+			newPlantIDs = append(newPlantIDs, int64(key))
+		}
 
 		res := db.DB.Table(gormModels.PlantsTable).Where("user_id = ?", userID).Update("plants_id", &newPlantIDs)
 		if res.Error != nil {
@@ -112,7 +123,7 @@ func (db *Postgres) GetByPlantName(plantName string) ([]gormModels.XiaomiPlant, 
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
 		Preload("Parameter").
-		Where("plant_id LIKE ? OR display_pid LIKE ?", "%"+strings.ToLower(plantName)+"%", "%"+plantName+"%").
+		Where("plant_id LIKE LOWER(?) OR LOWER(display_pid) LIKE LOWER(?) ", "%"+plantName+"%", "%"+plantName+"%").
 		Limit(10).
 		Find(&plants).Error; err != nil {
 		return nil, err
@@ -122,7 +133,7 @@ func (db *Postgres) GetByPlantName(plantName string) ([]gormModels.XiaomiPlant, 
 
 func (db *Postgres) GetPlantsPage(pageNum uint64) ([]gormModels.XiaomiPlant, error) {
 	pageSize := 10
-	offset := (pageSize - 1) * int(pageNum-1)
+	offset := pageSize * int(pageNum-1)
 	var plants []gormModels.XiaomiPlant
 	if err := db.DB.Preload("Basic").
 		Preload("Maintenance").
@@ -203,11 +214,34 @@ func (db *Postgres) CreateSavedPlant(userID, plantID uint64) error {
 }
 
 func (db *Postgres) DeleteSavedPlant(userID, plantID uint64) error {
-	if err := db.DB.Where("user_id = ? AND plant_id = ?", userID, plantID).
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Select("SavedPlant").
+		Where("user_id = ? AND plant_id = ?", userID, plantID).
 		Delete(&gormModels.SavedPlant{}).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
-	return nil
+
+	if err := tx.Where("user_id = ? AND plant_id = ?", userID, plantID).
+		Delete(&gormModels.Channel{}).
+		Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("user_id = ? AND plant_id = ?", userID, plantID).
+		Delete(&gormModels.Notification{}).
+		Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 func (db *Postgres) GetSavedPlants(userID uint64) ([]gormModels.SavedPlant, error) {
@@ -228,4 +262,33 @@ func (db *Postgres) GetSavedPlantByIDs(userID, plantID uint64) (gormModels.Saved
 		return gormModels.SavedPlant{}, err
 	}
 	return plantRow, nil
+}
+
+func (db *Postgres) CreateChannel(plantID, channelID, userID uint64) (uint64, error) {
+	var chanRow gormModels.Channel
+	if err := db.DB.Create(&gormModels.Channel{
+		UserID:    userID,
+		PlantID:   plantID,
+		ChannelID: channelID,
+	}).Scan(&chanRow).Error; err != nil {
+		return 0, err
+	}
+	return uint64(chanRow.ID), nil
+}
+
+func (db *Postgres) GetChannelByUserAndPlantID(userID, plantID uint64) (uint64, error) {
+	var chanRow gormModels.Channel
+	if err := db.DB.Model(&gormModels.Channel{}).
+		Where("user_id = ? AND plant_id = ?", userID, plantID).
+		First(&chanRow).Error; err != nil {
+		return 0, err
+	}
+	return chanRow.ChannelID, nil
+}
+
+func (db *Postgres) UpdateChannelByUserAndPlantID(userID, plantID, channelID uint64) error {
+	return db.DB.Model(&gormModels.Channel{}).
+		Where("user_id = ? AND plant_id = ?", userID, plantID).
+		Update("channel_id", channelID).
+		Error
 }

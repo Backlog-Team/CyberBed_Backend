@@ -12,12 +12,20 @@ import (
 )
 
 type PlantsUsecase struct {
-	plantsRepository domain.PlantsRepository
+	plantsRepository        domain.PlantsRepository
+	notificationsRepository domain.NotificationsRepository
+	foldersRepository       domain.FoldersRepository
 }
 
-func NewPlansUsecase(p domain.PlantsRepository, api domain.PlantsAPI) domain.PlantsUsecase {
+func NewPlansUsecase(
+	p domain.PlantsRepository,
+	f domain.FoldersRepository,
+	n domain.NotificationsRepository,
+) domain.PlantsUsecase {
 	return PlantsUsecase{
-		plantsRepository: p,
+		plantsRepository:        p,
+		foldersRepository:       f,
+		notificationsRepository: n,
 	}
 }
 
@@ -110,14 +118,14 @@ func (u PlantsUsecase) GetPlant(userID uint64, plantID int64) (httpModels.Plant,
 	}, nil
 }
 
-func (u PlantsUsecase) GetPlants(userID uint64) ([]httpModels.XiaomiPlant, error) {
+func (u PlantsUsecase) GetPlants(userID uint64) (map[uint64]httpModels.XiaomiPlant, error) {
 	plantsIDs, err := u.plantsRepository.GetPlantsByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
 	pl := plantsIDs.PlantsID
-	plants := make([]httpModels.XiaomiPlant, 0)
+	plants := make(map[uint64]httpModels.XiaomiPlant, 0)
 	for _, p := range pl {
 		curPlant, err := u.plantsRepository.GetPlantByID(uint64(p))
 		if err != nil {
@@ -126,7 +134,8 @@ func (u PlantsUsecase) GetPlants(userID uint64) ([]httpModels.XiaomiPlant, error
 			}
 			return nil, err
 		}
-		plants = append(plants, httpModels.XiaomiPlantGormToHttp(curPlant))
+		plants[curPlant.ID] = httpModels.XiaomiPlantGormToHttp(curPlant)
+		// plants = append(plants, httpModels.XiaomiPlantGormToHttp(curPlant))
 	}
 
 	return plants, nil
@@ -282,6 +291,41 @@ func (u PlantsUsecase) GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, 
 			return nil, err
 		}
 		resPlants = append(resPlants, httpModels.XiaomiPlantGormToHttp(recievedPlant))
+
+		nf, err := u.notificationsRepository.GetNotificationsByUserPlantID(userID, pl.PlantID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		resPlants[len(resPlants)-1].WateringPeriod = nf.Period
+
+		ch, err := u.plantsRepository.GetChannelByUserAndPlantID(userID, pl.PlantID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		resPlants[len(resPlants)-1].ChannelID = ch
+		resPlants[len(resPlants)-1].IsCustom = false
+	}
+
+	customPlants, err := u.plantsRepository.GetCustomPlants(userID)
+	if err != nil {
+		return []httpModels.XiaomiPlant{}, err
+	}
+	for _, cp := range customPlants {
+		resPlants = append(resPlants, httpModels.XiaomiPlant{
+			ID:      cp.ID,
+			PlantID: cp.PlantName,
+			Basic: struct {
+				FloralLanguage string `             json:"floral_language"`
+				Origin         string `             json:"origin"`
+				Production     string `             json:"production"`
+				Category       string `             json:"category"`
+				Blooming       string `             json:"blooming"`
+				Color          string `             json:"color"`
+			}{
+				FloralLanguage: cp.About,
+			},
+			IsCustom: true,
+		})
 	}
 
 	return resPlants, nil
@@ -289,4 +333,116 @@ func (u PlantsUsecase) GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, 
 
 func (u PlantsUsecase) DeleteSavedPlant(userID, plantID uint64) error {
 	return u.plantsRepository.DeleteSavedPlant(userID, plantID)
+}
+
+func (u PlantsUsecase) GetSavedFieldOfPlant(
+	plant httpModels.XiaomiPlant,
+	userID uint64,
+) (bool, error) {
+	likedPlants, err := u.GetSavedPlants(userID)
+	if err != nil {
+		return false, err
+	}
+	for _, v := range likedPlants {
+		if v.ID == plant.ID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (f PlantsUsecase) CreateChannel(plantID, channelID, userID uint64) (uint64, error) {
+	_, err := f.plantsRepository.GetChannelByUserAndPlantID(userID, plantID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			id, err := f.plantsRepository.CreateChannel(plantID, channelID, userID)
+			if err != nil {
+				return 0, err
+			}
+			return id, nil
+		}
+		return 0, err
+	}
+
+	return 0, errors.Wrapf(
+		err,
+		"channel with id {%d} and user_id {%d} already exists",
+		channelID,
+		userID,
+	)
+}
+
+func (u PlantsUsecase) GetChannelByUserAndPlantID(userID, plantID uint64) (uint64, error) {
+	return u.plantsRepository.GetChannelByUserAndPlantID(userID, plantID)
+}
+
+func (u PlantsUsecase) UpdateChannel(userID, plantID, channelID uint64) error {
+	return u.plantsRepository.UpdateChannelByUserAndPlantID(userID, plantID, channelID)
+}
+
+func (u PlantsUsecase) SetUserPlantFields(
+	plant httpModels.XiaomiPlant,
+	userID uint64,
+) (httpModels.XiaomiPlant, error) {
+	resPlant := plant
+	isSaved, err := u.GetSavedFieldOfPlant(plant, userID)
+	if err != nil {
+		return httpModels.XiaomiPlant{}, err
+	}
+	resPlant.IsSaved = isSaved
+
+	// Check if plant was saved
+	foldersToCheck, err := u.foldersRepository.GetFolders(userID)
+	if err != nil {
+		return httpModels.XiaomiPlant{}, err
+	}
+	for _, f := range foldersToCheck {
+		pl, err := u.foldersRepository.GetPlantsID(f.ID)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return httpModels.XiaomiPlant{}, err
+		}
+
+		var fids []uint64
+		for _, v := range pl {
+			fids = append(fids, v)
+		}
+
+		if slices.Contains(fids, plant.ID) {
+			resPlant.IsLiked = true
+			resPlant.FolderSaved = append(resPlant.FolderSaved, httpModels.FolderGormToHttp(f))
+		}
+	}
+
+	savedPlants, err := u.GetSavedPlants(userID)
+	if err != nil {
+		return httpModels.XiaomiPlant{}, err
+	}
+
+	for _, v := range savedPlants {
+		if v.ID == plant.ID {
+			resPlant.WateringPeriod = v.WateringPeriod
+			resPlant.ChannelID = v.ChannelID
+			break
+		}
+	}
+
+	return resPlant, nil
+}
+
+func (u PlantsUsecase) SetUserPlantsFields(
+	plants []httpModels.XiaomiPlant,
+	userID uint64,
+) ([]httpModels.XiaomiPlant, error) {
+	resPlants := make([]httpModels.XiaomiPlant, 0)
+
+	for _, plant := range plants {
+		resPlant, err := u.SetUserPlantFields(plant, userID)
+		if err != nil {
+			return []httpModels.XiaomiPlant{}, err
+		}
+
+		resPlants = append(resPlants, resPlant)
+	}
+
+	return resPlants, nil
 }

@@ -1,7 +1,13 @@
 DROP TABLE IF EXISTS cookies;
+DROP TABLE IF EXISTS custom_plants;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS plant_folder_relations;
+DROP TABLE IF EXISTS channels;
+DROP TABLE IF EXISTS folders;
+DROP TABLE IF EXISTS plant_stats;
+DROP TABLE IF EXISTS saved_plants;
 DROP TABLE IF EXISTS user_plants;
 DROP TABLE IF EXISTS users;
-
 DROP TABLE IF EXISTS xiaomi_plant_basics;
 DROP TABLE IF EXISTS xiaomi_plant_maintenances;
 DROP TABLE IF EXISTS xiaomi_plant_prameters;

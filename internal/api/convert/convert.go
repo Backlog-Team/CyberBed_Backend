@@ -12,7 +12,8 @@ func InputRecognitionResultsToModels(results httpModels.RecResponse, count int) 
 		}
 
 		plants = append(plants, httpModels.Plant{
-			CommonName: result.Species.Name,
+			CommonName:      result.Species.Name,
+			PredictionScore: result.Score,
 		})
 		counter++
 	}

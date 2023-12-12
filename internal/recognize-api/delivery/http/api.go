@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
@@ -34,6 +35,10 @@ func (r *RecognitionHandler) Recognize(c echo.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to recognize plant")
 	}
+
+	sort.SliceStable(recognize, func(i, j int) bool {
+		return recognize[i].PredictionScore >= recognize[j].PredictionScore
+	})
 
 	return c.JSON(http.StatusOK, recognize)
 }
