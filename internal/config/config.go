@@ -13,6 +13,7 @@ const (
 	port          = 8080
 	loggerLevel   = "debug"
 	translateMode = false
+	envFile       = ".env"
 )
 
 type Config struct {
@@ -32,6 +33,7 @@ type Config struct {
 		} `yaml:"init_db"`
 	} `yaml:"database"`
 	TranslateMode bool   `yaml:"translate_mode"`
+	EnvFile       string `yaml:"env_file"`
 	LoggerLvl     string `yaml:"logger_level"`
 	RecognizeAPI  struct {
 		MaxImages    int    `yaml:"max_images"`
@@ -109,6 +111,7 @@ func New() *Config {
 			},
 		}),
 		TranslateMode: translateMode,
+		EnvFile:       envFile,
 		LoggerLvl:     loggerLevel,
 		RecognizeAPI: struct {
 			MaxImages    int    `yaml:"max_images"`

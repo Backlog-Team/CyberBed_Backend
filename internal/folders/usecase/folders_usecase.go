@@ -3,6 +3,7 @@ package foldersUsecase
 import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"slices"
 
 	"github.com/cyber_bed/internal/domain"
 	httpModels "github.com/cyber_bed/internal/models/http"
@@ -24,11 +25,22 @@ func NewFoldersUsecase(
 }
 
 func (f FoldersUsecase) CreateFolder(folder httpModels.Folder) (uint64, error) {
-	folderID, err := f.foldersRepository.CreateFolder(folder)
+	_, err := f.foldersRepository.GetFolderByNameAndUserID(folder.FolderName, folder.UserID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			folderID, err := f.foldersRepository.CreateFolder(folder)
+			if err != nil {
+				return 0, err
+			}
+			return folderID, nil
+		}
 		return 0, err
 	}
-	return folderID, nil
+	return 0, errors.Wrapf(
+		httpModels.ErrRecordExists,
+		"folder with name {%s} already exists",
+		folder.FolderName,
+	)
 }
 
 func (f FoldersUsecase) GetFolderByID(id uint64) (httpModels.Folder, error) {
@@ -102,9 +114,78 @@ func (f FoldersUsecase) AddPlantToFolder(folderID, plantID uint64) error {
 			return err
 		}
 	}
+	ids, err := f.foldersRepository.GetPlantsID(folderID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if slices.Contains(ids, plantID) {
+		return errors.Wrapf(
+			httpModels.ErrRecordExists,
+			"plan with id {%d} already exists in folder with id {%d}",
+			folderID,
+			plantID,
+		)
+	}
 	return f.foldersRepository.AddPlantToFolder(folderID, plantID)
 }
 
 func (f FoldersUsecase) DeletePlantFromFolder(folderID, plantID uint64) error {
 	return f.foldersRepository.UpdateFolderPlant(folderID, plantID)
+}
+
+func (f FoldersUsecase) GetFolderByPlantAndUserID(
+	plantID, userID uint64,
+) (map[httpModels.Folder]map[uint64]bool, error) {
+	folders, err := f.foldersRepository.GetFolderByPlantAndUserID(userID, plantID)
+	if err != nil {
+		return make(map[httpModels.Folder]map[uint64]bool), err
+	}
+
+	// map[Folder] -> map[plants_id]
+	resMap := make(map[httpModels.Folder]map[uint64]bool, 0)
+	for _, v := range folders {
+		curMap := make(map[uint64]bool)
+		for _, val := range v.PlantsRelation.PlantsID {
+			curMap[uint64(val)] = true
+		}
+		resMap[httpModels.FolderGormToHttp(v)] = curMap
+	}
+
+	return resMap, nil
+}
+
+func (f FoldersUsecase) MovePlantFromFolder(fromID, toID, plantID uint64) error {
+	fromIDs, err := f.foldersRepository.GetPlantsID(fromID)
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(fromIDs, plantID) {
+		return errors.Wrapf(
+			httpModels.ErrNotFound,
+			"plant with id {%d} in folder with id {%d} not found",
+			plantID,
+			fromID,
+		)
+	}
+
+	toIDs, err := f.foldersRepository.GetPlantsID(toID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if slices.Contains(toIDs, plantID) {
+		return errors.Wrapf(
+			httpModels.ErrRecordExists,
+			"plant with id {%d} in folder id {%d} already exists",
+			plantID,
+			toID,
+		)
+	}
+
+	if err = f.foldersRepository.UpdateFolderPlant(fromID, plantID); err != nil {
+		return err
+	}
+	if err = f.foldersRepository.AddPlantToFolder(toID, plantID); err != nil {
+		return err
+	}
+	return nil
 }

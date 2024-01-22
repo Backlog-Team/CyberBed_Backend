@@ -8,7 +8,7 @@ import (
 type PlantsUsecase interface {
 	AddPlant(plant httpModels.Plant) error
 	GetPlant(userID uint64, plantID int64) (httpModels.Plant, error)
-	GetPlants(userID uint64) ([]httpModels.XiaomiPlant, error)
+	GetPlants(userID uint64) (map[uint64]httpModels.XiaomiPlant, error)
 	DeletePlant(userID, plantID uint64) error
 	GetPlantByID(plantID uint64) (gormModels.XiaomiPlant, error)
 	GetPlantByName(plantName string) ([]httpModels.XiaomiPlant, error)
@@ -24,4 +24,15 @@ type PlantsUsecase interface {
 	CreateSavedPlant(userID, plantID uint64) error
 	GetSavedPlants(userID uint64) ([]httpModels.XiaomiPlant, error)
 	DeleteSavedPlant(userID, plantID uint64) error
+
+	CreateChannel(plantID, channelID, userID uint64) (uint64, error)
+	GetChannelByUserAndPlantID(userID, plantID uint64) (uint64, error)
+	UpdateChannel(userID, plantID, channelID uint64) error
+
+	GetSavedFieldOfPlant(plant httpModels.XiaomiPlant, userID uint64) (bool, error)
+	SetUserPlantFields(plant httpModels.XiaomiPlant, userID uint64) (httpModels.XiaomiPlant, error)
+	SetUserPlantsFields(
+		plants []httpModels.XiaomiPlant,
+		userID uint64,
+	) ([]httpModels.XiaomiPlant, error)
 }

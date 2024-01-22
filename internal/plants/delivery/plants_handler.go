@@ -17,22 +17,38 @@ import (
 )
 
 type PlantsHandler struct {
-	plantsUsecase domain.PlantsUsecase
-	usersUsecase  domain.UsersUsecase
+	plantsUsecase        domain.PlantsUsecase
+	usersUsecase         domain.UsersUsecase
+	foldersUsecase       domain.FoldersUsecase
+	notificationsUsecase domain.NotificationsUsecase
 }
 
 func NewPlantsHandler(
 	p domain.PlantsUsecase,
 	u domain.UsersUsecase,
 	pl domain.PlantsAPI,
+	f domain.FoldersUsecase,
+	n domain.NotificationsUsecase,
 ) PlantsHandler {
 	return PlantsHandler{
-		plantsUsecase: p,
-		usersUsecase:  u,
+		plantsUsecase:        p,
+		usersUsecase:         u,
+		foldersUsecase:       f,
+		notificationsUsecase: n,
 	}
 }
 
 func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
 	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
@@ -43,7 +59,13 @@ func (h PlantsHandler) GetPlantFromAPI(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.JSON(http.StatusOK, httpModels.XiaomiPlantGormToHttp(plant))
+	httpPlant := httpModels.XiaomiPlantGormToHttp(plant)
+	res, err := h.plantsUsecase.SetUserPlantFields(httpPlant, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) GetPlantImage(c echo.Context) error {
@@ -68,6 +90,16 @@ func (h PlantsHandler) GetPlantImage(c echo.Context) error {
 }
 
 func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
 	pageStr := c.QueryParam("page")
 	if pageStr == "" {
 		plantName := c.QueryParam("name")
@@ -75,7 +107,13 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)
 		}
-		return c.JSON(http.StatusOK, plants)
+
+		res, err := h.plantsUsecase.SetUserPlantsFields(plants, userID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+
+		return c.JSON(http.StatusOK, res)
 	}
 
 	pageNum, err := strconv.ParseUint(pageStr, 10, 64)
@@ -88,7 +126,12 @@ func (h PlantsHandler) GetPlantsFromAPI(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.JSON(http.StatusOK, plants)
+	res, err := h.plantsUsecase.SetUserPlantsFields(plants, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) CreatePlant(c echo.Context) error {
@@ -146,8 +189,14 @@ func (h PlantsHandler) GetPlant(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
+	httpPlant := httpModels.XiaomiPlantGormToHttp(xiaomiPlant)
 
-	return c.JSON(http.StatusOK, httpModels.XiaomiPlantGormToHttp(xiaomiPlant))
+	res, err := h.plantsUsecase.SetUserPlantFields(httpPlant, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) GetPlants(c echo.Context) error {
@@ -166,7 +215,18 @@ func (h PlantsHandler) GetPlants(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, plants)
+	// Converting map to slice
+	resPlants := make([]httpModels.XiaomiPlant, 0)
+	for _, v := range plants {
+		resPlants = append(resPlants, v)
+	}
+
+	res, err := h.plantsUsecase.SetUserPlantsFields(resPlants, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h PlantsHandler) DeletePlant(c echo.Context) error {
@@ -424,8 +484,31 @@ func (h PlantsHandler) CreateSavedPlant(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
+	duration := c.QueryParam("wateringTime")
+	channel := c.QueryParam("channelID")
+	var channelID uint64
+	if len(channel) > 0 {
+		channelID, err = strconv.ParseUint(channel, 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+	}
+
 	if err := h.plantsUsecase.CreateSavedPlant(userID, plantID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	if _, err := h.plantsUsecase.CreateChannel(plantID, channelID, userID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	if len(duration) > 0 {
+		if _, err = h.notificationsUsecase.CreateNotification(httpModels.Notification{
+			UserID:         userID,
+			PlantID:        plantID,
+			ExpirationTime: duration,
+		}); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
@@ -447,7 +530,48 @@ func (h PlantsHandler) GetSavedPlants(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, plants)
+	res, err := h.plantsUsecase.SetUserPlantsFields(plants, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h PlantsHandler) UpdateSavedPlant(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	var recievedStat httpModels.SavedPlant
+	if err = c.Bind(&recievedStat); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	_, err = h.notificationsUsecase.UpdatePeriodNotification(httpModels.Notification{
+		UserID:         userID,
+		PlantID:        plantID,
+		ExpirationTime: recievedStat.WatringPeriod,
+	})
+
+	h.plantsUsecase.UpdateChannel(userID, plantID, recievedStat.ChannelID)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
 }
 
 func (h PlantsHandler) DeleteSavedPlant(c echo.Context) error {
@@ -471,4 +595,57 @@ func (h PlantsHandler) DeleteSavedPlant(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, httpModels.EmptyModel{})
+}
+
+func (h PlantsHandler) CreateChannel(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	channelID, err := strconv.ParseUint(c.Param("channelID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	id, err := h.plantsUsecase.CreateChannel(plantID, channelID, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.ID{ID: id})
+}
+
+func (h PlantsHandler) GetChannel(c echo.Context) error {
+	cookie, err := httpAuth.GetCookie(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	userID, err := h.usersUsecase.GetUserIDBySessionID(cookie.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+
+	plantID, err := strconv.ParseUint(c.Param("plantID"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	id, err := h.plantsUsecase.GetChannelByUserAndPlantID(userID, plantID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, httpModels.ID{ID: id})
 }
