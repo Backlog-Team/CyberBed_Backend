@@ -13,6 +13,7 @@ services:
         condition: service_healthy
     volumes:
       - ~/migrations:/root/plant-database
+      - ~/backend/.env.prod:/root/.env
     networks:
       - server
 
