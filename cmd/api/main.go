@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 
 	"github.com/cyber_bed/internal/app"
@@ -21,9 +20,12 @@ func main() {
 		log.Print("Failed to open config file")
 	}
 
-	if err := godotenv.Load(cfg.EnvFile); err != nil {
-		log.Fatal("Error loading env file")
+	if err := cfg.Open(cfg.EnvFile); err != nil {
+		log.Fatalf("Error loading %s file", cfg.EnvFile)
 	}
+	// if err := godotenv.Load(cfg.EnvFile); err != nil {
+	// 	log.Fatal("Error loading %s file", cfg.EnvFile)
+	// }
 
 	e := echo.New()
 	app := app.New(e, cfg)
